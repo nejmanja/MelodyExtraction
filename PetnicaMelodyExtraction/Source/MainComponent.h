@@ -29,6 +29,11 @@ public:
 		stopButton.addListener(this);
 		stopButton.setEnabled(false);
 
+		addAndMakeVisible(getBlockButton);
+		getBlockButton.setButtonText("preform fft on block");
+		getBlockButton.setColour(TextButton::buttonColourId, Colours::purple);
+		getBlockButton.setEnabled(false);
+
 		formatManager.registerBasicFormats();
 		transportSource.addChangeListener(this);
 
@@ -72,6 +77,7 @@ public:
 					std::unique_ptr<AudioFormatReaderSource> newSource(new AudioFormatReaderSource(reader, true));
 					transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
 					playButton.setEnabled(true);
+					getBlockButton.setEnabled(true);
 					readerSource.reset(newSource.release());
 				}
 			}
@@ -119,9 +125,10 @@ public:
     void resized() override
     {
 		Rectangle<int> window = getLocalBounds();
-		openButton.setBounds(window.removeFromTop(getHeight() / 3).reduced(5));
-		playButton.setBounds(window.removeFromTop(getHeight() / 3).reduced(5));
-		stopButton.setBounds(window.reduced(5));
+		openButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
+		playButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
+		stopButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
+		getBlockButton.setBounds(window.reduced(5));
     }
 
 
@@ -166,7 +173,7 @@ private:
 		}
 	}
 
-	TextButton openButton, playButton, stopButton;
+	TextButton openButton, playButton, stopButton, getBlockButton;
 
 	AudioFormatManager formatManager;
 	std::unique_ptr<AudioFormatReaderSource> readerSource;

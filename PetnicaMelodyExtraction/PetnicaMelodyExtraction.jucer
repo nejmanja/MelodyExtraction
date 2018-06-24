@@ -4,6 +4,7 @@
               jucerVersion="5.3.2">
   <MAINGROUP id="mjht9c" name="PetnicaMelodyExtraction">
     <GROUP id="{31828602-A8FF-42DB-92B7-EA20AF2C7732}" name="Source">
+      <FILE id="CDfE0h" name="FFTComponent.h" compile="0" resource="0" file="Source/FFTComponent.h"/>
       <FILE id="S0CStb" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="bXj5j3" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
@@ -51,5 +52,5 @@
   <LIVE_SETTINGS>
     <WINDOWS/>
   </LIVE_SETTINGS>
-  <JUCEOPTIONS/>
+  <JUCEOPTIONS JUCE_USE_MP3AUDIOFORMAT="1"/>
 </JUCERPROJECT>
