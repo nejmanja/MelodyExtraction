@@ -30,6 +30,7 @@
         <MODULEPATH id="juce_audio_formats" path="C:/Users/Milanovic/Documents/Dev/JUCE/modules"/>
         <MODULEPATH id="juce_audio_processors" path="C:/Users/Milanovic/Documents/Dev/JUCE/modules"/>
         <MODULEPATH id="juce_audio_utils" path="C:/Users/Milanovic/Documents/Dev/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="C:/Users/Milanovic/Documents/Dev/JUCE/modules"/>
       </MODULEPATHS>
     </VS2017>
   </EXPORTFORMATS>
@@ -42,6 +43,7 @@
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

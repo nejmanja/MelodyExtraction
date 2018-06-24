@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-
+#include "FFTComponent.h"
 //==============================================================================
 /*
     This component lives inside our window, and this is where you should put all
@@ -37,7 +37,9 @@ public:
 		formatManager.registerBasicFormats();
 		transportSource.addChangeListener(this);
 
-        setSize (400, 300);
+		addAndMakeVisible(fftComp);
+
+        setSize (800, 300);
         setAudioChannels (0, 2);
     }
 
@@ -90,12 +92,16 @@ public:
 		{
 			changeState(Stopping);
 		}
+		else if (button == &getBlockButton)
+		{
+			preformFFTOnBlock();
+		}
 	}
 
     //==============================================================================
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
     {
-		transportSource.prepareToPlay(samplesPerBlockExpected,sampleRate);
+		
     }
 
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
@@ -106,6 +112,9 @@ public:
 			return;
 		}
 		transportSource.getNextAudioBlock(bufferToFill);
+
+		
+		
     }
 
     void releaseResources() override
@@ -118,19 +127,25 @@ public:
     {
         // (Our component is opaque, so we must completely fill the background with a solid colour)
         g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
-
-        // You can add your drawing code here!
     }
 
     void resized() override
     {
 		Rectangle<int> window = getLocalBounds();
+
+		fftComp.setBounds(window.removeFromRight(getWidth() / 2));
+
 		openButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
 		playButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
 		stopButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
 		getBlockButton.setBounds(window.reduced(5));
     }
 
+	void preformFFTOnBlock()
+	{
+		//	 fftComp.pushNextSampleIntoFifo(channelData[sample]);
+
+	}
 
 private:
     //==============================================================================
@@ -179,6 +194,10 @@ private:
 	std::unique_ptr<AudioFormatReaderSource> readerSource;
 	AudioTransportSource transportSource;
 	TransportState state;
+
+	//AudioSampleBuffer ovo mi treba lolara
+
+	FFTComponent fftComp;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
