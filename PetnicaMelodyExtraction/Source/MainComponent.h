@@ -35,12 +35,11 @@ public:
 		getBlockButton.setEnabled(false);
 
 		formatManager.registerBasicFormats();
-		transportSource.addChangeListener(this);
 
 		addAndMakeVisible(fftComp);
 
         setSize (800, 300);
-        setAudioChannels (0, 2);
+        //setAudioChannels (0, 1);
     }
 
     ~MainComponent()
@@ -54,43 +53,33 @@ public:
 
 	void changeListenerCallback(ChangeBroadcaster* source) override
 	{
-		if (source == &transportSource)
-		{
-			if (transportSource.isPlaying())
-				changeState(Playing);
-			else
-				changeState(Stopped);
-		}
 	}
 
 	void buttonClicked(Button* button) override
 	{
 		if (button == &openButton)
 		{
-			FileChooser chooser("Select a Wave file to play...",
-				File::nonexistent,
-				"*.wav; *.mp3");
+			shutdownAudio();
+
+			FileChooser chooser("Select a Wave file to play...", File::nonexistent, "*.wav; *.mp3");
 			if (chooser.browseForFileToOpen())
 			{
 				auto file = chooser.getResult();
-				auto* reader = formatManager.createReaderFor(file);
+				std::unique_ptr<AudioFormatReader> reader (formatManager.createReaderFor(file));
 				if (reader != nullptr)
 				{
-					std::unique_ptr<AudioFormatReaderSource> newSource(new AudioFormatReaderSource(reader, true));
-					transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
-					playButton.setEnabled(true);
-					getBlockButton.setEnabled(true);
-					readerSource.reset(newSource.release());
+					fileBuffer.setSize(reader->numChannels, (int)reader->lengthInSamples);
+					reader->read(&fileBuffer, 0, (int)reader->lengthInSamples, 0, true, true);
+					position = 0;
+					setAudioChannels(0, reader->numChannels);
 				}
 			}
 		}
 		else if (button == &playButton)
 		{
-			changeState(Starting);
 		}
 		else if (button == &stopButton)
 		{
-			changeState(Stopping);
 		}
 		else if (button == &getBlockButton)
 		{
@@ -101,32 +90,45 @@ public:
     //==============================================================================
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
     {
-		transportSource.prepareToPlay(samplesPerBlockExpected,sampleRate);
+		//transportSource.prepareToPlay(samplesPerBlockExpected,sampleRate);
     }
 
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
     {
-		if (readerSource.get() == nullptr)
-		{
-			bufferToFill.clearActiveBufferRegion();
-			return;
-		}
-		transportSource.getNextAudioBlock(bufferToFill);
+		int numInputChannels = fileBuffer.getNumChannels();
+		int numOutputChannels = bufferToFill.buffer->getNumChannels();
 
-		if (bufferToFill.buffer->getNumChannels() > 0)
+		int outputSamplesRemaining = bufferToFill.numSamples;
+		int outputSamplesOffset = bufferToFill.startSample;
+
+		while (outputSamplesRemaining > 0)
 		{
-			float* const channelData = bufferToFill.buffer->getWritePointer(0, bufferToFill.startSample);
-			for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
+			int bufferSamplesRemaining = fileBuffer.getNumSamples() - position;
+			int samplesThisTime = jmin(outputSamplesRemaining, bufferSamplesRemaining);
+
+			for (int channel = 0; channel < numOutputChannels; ++channel)
 			{
-				fftComp.pushNextSampleIntoFifo(channelData[sample]);
+				bufferToFill.buffer->copyFrom(channel,
+					outputSamplesOffset,
+					fileBuffer,
+					channel % numInputChannels,
+					position,
+					samplesThisTime);
+
 			}
+
+			outputSamplesRemaining -= samplesThisTime;
+			outputSamplesOffset += samplesThisTime;
+			position += samplesThisTime;
+
+			if (position == fileBuffer.getNumSamples())
+				position = 0;
 		}
-		
     }
 
     void releaseResources() override
 	{
-		transportSource.releaseResources();
+		//transportSource.releaseResources();
     }
 
     //==============================================================================
@@ -150,56 +152,21 @@ public:
 
 	void preformFFTOnBlock()
 	{
-
+		//ovde ce radis stvari
 	}
 
 private:
     //==============================================================================
     // Your private member variables go here...
 
-	
-
-	enum TransportState
-	{
-		Starting,
-		Stopping,
-		Playing,
-		Stopped
-	};
-
-	void changeState(TransportState newState)
-	{
-		if (state != newState)
-		{
-			state = newState;
-
-			switch(state)
-			{
-			case Stopped:
-				stopButton.setEnabled(false);
-				playButton.setEnabled(true);
-				transportSource.setPosition(0.0);
-				break;
-			case Playing:
-				stopButton.setEnabled(true);
-				break;
-			case Starting:
-				playButton.setEnabled(false);
-				transportSource.start();
-				break;
-			case Stopping:
-				transportSource.stop();
-				break;
-			}
-		}
-	}
-
 	TextButton openButton, playButton, stopButton, getBlockButton;
 
 	AudioFormatManager formatManager;
 	std::unique_ptr<AudioFormatReaderSource> readerSource;
-	AudioTransportSource transportSource;
-	TransportState state;
+
+	AudioSampleBuffer fileBuffer;
+
+	int position = 0;
 
 	FFTComponent fftComp;
 
