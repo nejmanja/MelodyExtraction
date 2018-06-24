@@ -1,11 +1,3 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -15,55 +7,104 @@
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainComponent   : public AudioAppComponent
+class MainComponent   : public AudioAppComponent, public Button::Listener, public ChangeListener
 {
 public:
     //==============================================================================
     MainComponent()
     {
-        // Make sure you set the size of the component after
-        // you add any child components.
-        setSize (800, 600);
+		addAndMakeVisible(openButton);
+		openButton.setButtonText("Open...");
+		openButton.addListener(this);
 
-        // specify the number of input and output channels that we want to open
-        setAudioChannels (2, 2);
+		addAndMakeVisible(playButton);
+		playButton.setButtonText("Play");
+		playButton.setColour(TextButton::buttonColourId, Colours::green);
+		playButton.addListener(this);
+		playButton.setEnabled(false);
+
+		addAndMakeVisible(stopButton);
+		stopButton.setButtonText("Stop");
+		stopButton.setColour(TextButton::buttonColourId, Colours::red);
+		stopButton.addListener(this);
+		stopButton.setEnabled(false);
+
+		formatManager.registerBasicFormats();
+		transportSource.addChangeListener(this);
+
+        setSize (400, 300);
+        setAudioChannels (0, 2);
     }
 
     ~MainComponent()
     {
-        // This shuts down the audio device and clears the audio source.
+		openButton.removeListener(this);
+		playButton.removeListener(this);
+		stopButton.removeListener(this);
+
         shutdownAudio();
     }
+
+	void changeListenerCallback(ChangeBroadcaster* source) override
+	{
+		if (source == &transportSource)
+		{
+			if (transportSource.isPlaying())
+				changeState(Playing);
+			else
+				changeState(Stopped);
+		}
+	}
+
+	void buttonClicked(Button* button) override
+	{
+		if (button == &openButton)
+		{
+			FileChooser chooser("Select a Wave file to play...",
+				File::nonexistent,
+				"*.wav; *.mp3");
+			if (chooser.browseForFileToOpen())
+			{
+				auto file = chooser.getResult();
+				auto* reader = formatManager.createReaderFor(file);
+				if (reader != nullptr)
+				{
+					std::unique_ptr<AudioFormatReaderSource> newSource(new AudioFormatReaderSource(reader, true));
+					transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
+					playButton.setEnabled(true);
+					readerSource.reset(newSource.release());
+				}
+			}
+		}
+		else if (button == &playButton)
+		{
+			changeState(Starting);
+		}
+		else if (button == &stopButton)
+		{
+			changeState(Stopping);
+		}
+	}
 
     //==============================================================================
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
     {
-        // This function will be called when the audio device is started, or when
-        // its settings (i.e. sample rate, block size, etc) are changed.
-
-        // You can use this function to initialise any resources you might need,
-        // but be careful - it will be called on the audio thread, not the GUI thread.
-
-        // For more details, see the help for AudioProcessor::prepareToPlay()
+		transportSource.prepareToPlay(samplesPerBlockExpected,sampleRate);
     }
 
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
     {
-        // Your audio-processing code goes here!
-
-        // For more details, see the help for AudioProcessor::getNextAudioBlock()
-
-        // Right now we are not producing any data, in which case we need to clear the buffer
-        // (to prevent the output of random noise)
-        bufferToFill.clearActiveBufferRegion();
+		if (readerSource.get() == nullptr)
+		{
+			bufferToFill.clearActiveBufferRegion();
+			return;
+		}
+		transportSource.getNextAudioBlock(bufferToFill);
     }
 
     void releaseResources() override
-    {
-        // This will be called when the audio device stops, or when it is being
-        // restarted due to a setting change.
-
-        // For more details, see the help for AudioProcessor::releaseResources()
+	{
+		transportSource.releaseResources();
     }
 
     //==============================================================================
@@ -77,9 +118,10 @@ public:
 
     void resized() override
     {
-        // This is called when the MainContentComponent is resized.
-        // If you add any child components, this is where you should
-        // update their positions.
+		Rectangle<int> window = getLocalBounds();
+		openButton.setBounds(window.removeFromTop(getHeight() / 3).reduced(5));
+		playButton.setBounds(window.removeFromTop(getHeight() / 3).reduced(5));
+		stopButton.setBounds(window.reduced(5));
     }
 
 
@@ -87,6 +129,49 @@ private:
     //==============================================================================
     // Your private member variables go here...
 
+	
+
+	enum TransportState
+	{
+		Starting,
+		Stopping,
+		Playing,
+		Stopped
+	};
+
+	void changeState(TransportState newState)
+	{
+		if (state != newState)
+		{
+			state = newState;
+
+			switch(state)
+			{
+			case Stopped:
+				stopButton.setEnabled(false);
+				playButton.setEnabled(true);
+				transportSource.setPosition(0.0);
+				break;
+			case Playing:
+				stopButton.setEnabled(true);
+				break;
+			case Starting:
+				playButton.setEnabled(false);
+				transportSource.start();
+				break;
+			case Stopping:
+				transportSource.stop();
+				break;
+			}
+		}
+	}
+
+	TextButton openButton, playButton, stopButton;
+
+	AudioFormatManager formatManager;
+	std::unique_ptr<AudioFormatReaderSource> readerSource;
+	AudioTransportSource transportSource;
+	TransportState state;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
