@@ -101,7 +101,7 @@ public:
     //==============================================================================
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
     {
-		
+		transportSource.prepareToPlay(samplesPerBlockExpected,sampleRate);
     }
 
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
@@ -113,7 +113,14 @@ public:
 		}
 		transportSource.getNextAudioBlock(bufferToFill);
 
-		
+		if (bufferToFill.buffer->getNumChannels() > 0)
+		{
+			float* const channelData = bufferToFill.buffer->getWritePointer(0, bufferToFill.startSample);
+			for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
+			{
+				fftComp.pushNextSampleIntoFifo(channelData[sample]);
+			}
+		}
 		
     }
 
@@ -143,7 +150,6 @@ public:
 
 	void preformFFTOnBlock()
 	{
-		//	 fftComp.pushNextSampleIntoFifo(channelData[sample]);
 
 	}
 
@@ -194,8 +200,6 @@ private:
 	std::unique_ptr<AudioFormatReaderSource> readerSource;
 	AudioTransportSource transportSource;
 	TransportState state;
-
-	//AudioSampleBuffer ovo mi treba lolara
 
 	FFTComponent fftComp;
 
