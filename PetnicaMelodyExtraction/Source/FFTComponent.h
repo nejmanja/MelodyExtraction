@@ -11,7 +11,7 @@ class FFTComponent    : public Component, private Timer
 public:
 	FFTComponent() :forwardFFT(fftOrder), spectrogramImage(Image::RGB, 512, 512, true)
     {
-		startTimerHz(30);
+		startTimerHz(60);
     }
 
     ~FFTComponent()

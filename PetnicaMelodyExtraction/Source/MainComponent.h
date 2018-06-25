@@ -32,6 +32,7 @@ public:
 		addAndMakeVisible(getBlockButton);
 		getBlockButton.setButtonText("preform fft on block");
 		getBlockButton.setColour(TextButton::buttonColourId, Colours::purple);
+		getBlockButton.addListener(this);
 		getBlockButton.setEnabled(false);
 
 		formatManager.registerBasicFormats();
@@ -72,6 +73,7 @@ public:
 					reader->read(&fileBuffer, 0, (int)reader->lengthInSamples, 0, true, true);
 					position = 0;
 					setAudioChannels(0, reader->numChannels);
+					getBlockButton.setEnabled(true);
 				}
 			}
 		}
@@ -90,11 +92,12 @@ public:
     //==============================================================================
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
     {
-		//transportSource.prepareToPlay(samplesPerBlockExpected,sampleRate);
+		
     }
 
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
     {
+		
 		int numInputChannels = fileBuffer.getNumChannels();
 		int numOutputChannels = bufferToFill.buffer->getNumChannels();
 
@@ -115,6 +118,8 @@ public:
 					position,
 					samplesThisTime);
 
+
+
 			}
 
 			outputSamplesRemaining -= samplesThisTime;
@@ -123,6 +128,8 @@ public:
 
 			if (position == fileBuffer.getNumSamples())
 				position = 0;
+
+			
 		}
     }
 
@@ -152,7 +159,13 @@ public:
 
 	void preformFFTOnBlock()
 	{
-		//ovde ce radis stvari
+		for (int i = 0; i < fftComp.fftSize; ++i)
+		{
+			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, i + samplePos));
+		}
+		samplePos += fftComp.fftSize;
+		if (samplePos >= fileBuffer.getNumSamples())
+			samplePos = 0;
 	}
 
 private:
@@ -167,6 +180,7 @@ private:
 	AudioSampleBuffer fileBuffer;
 
 	int position = 0;
+	int samplePos = 0;
 
 	FFTComponent fftComp;
 
