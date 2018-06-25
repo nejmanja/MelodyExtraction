@@ -65,8 +65,13 @@ public:
 					fileBuffer.setSize(reader->numChannels, (int)reader->lengthInSamples);
 					reader->read(&fileBuffer, 0, (int)reader->lengthInSamples, 0, true, true);
 					setAudioChannels(0, reader->numChannels);
+
+
 					__FILESAMPLERATE = reader->sampleRate;
 					despacito.setText("Sample rate: " + (String)__FILESAMPLERATE, dontSendNotification);
+
+					filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, 500, 1.5));
+					filter.setCoefficients(filterCoefficients);
 					getBlockButton.setEnabled(true);
 				}
 			}
@@ -118,8 +123,10 @@ public:
 	void preformFFTOnBlock()
 	{
 		//todo change to preform the whole thing at once
+		filter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		for (int t = 0; t < fileBuffer.getNumSamples(); ++t)
 		{
+			
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t));
 		}
 
@@ -137,8 +144,10 @@ private:
 
 	AudioFormatManager formatManager;
 	std::unique_ptr<AudioFormatReaderSource> readerSource;
-
 	AudioSampleBuffer fileBuffer;
+
+	IIRFilter filter;
+	IIRCoefficients filterCoefficients;
 
 	Label despacito;
 
