@@ -11,7 +11,7 @@ class FFTComponent    : public Component, private Timer
 public:
 	FFTComponent() :forwardFFT(fftOrder), spectrogramImage(Image::RGB, 512, 512, true)
     {
-		startTimerHz(60);
+		//startTimerHz(60);
     }
 
     ~FFTComponent()
@@ -28,19 +28,22 @@ public:
 
     void resized() override
     {
-
+		
     }
 
 	void pushNextSampleIntoFifo(float sample) noexcept
 	{
 		if (fifoIndex == fftSize)
 		{
-			if (!nextFFTBlockReady)
-			{
-				zeromem(fftData, sizeof(fftData));
-				memcpy(fftData, fifo, sizeof(fifo));
-				nextFFTBlockReady = true;
-			}
+			zeromem(fftData, sizeof(fftData));
+			memcpy(fftData, fifo, sizeof(fifo));
+
+			forwardFFT.performFrequencyOnlyForwardTransform(fftData);
+
+			Array<float> fftArray;
+			fftArray.addArray(fftData, 2 * fftSize);
+			entireAudio.add(fftArray);
+
 			fifoIndex = 0;
 		}
 		fifo[fifoIndex++] = sample;
@@ -61,20 +64,32 @@ public:
 		auto rightHandEdge = spectrogramImage.getWidth() - 1;
 		auto imageHeight = spectrogramImage.getHeight();
 
-		spectrogramImage.moveImageSection(0, 0, 1, 0, rightHandEdge, imageHeight);
+		
 
-		forwardFFT.performFrequencyOnlyForwardTransform(fftData);
-
-		auto maxLevel = FloatVectorOperations::findMinAndMax(fftData, fftSize / 2);
-
-		for (auto y = 1; y < imageHeight; ++y)
+		for (int i = 0; i < entireAudio.size(); ++i)
 		{
-			auto skewedProportionY = 1.0f - std::exp(std::log(y / (float)imageHeight) * 0.2f);
-			auto fftDataIndex = jlimit(0, fftSize / 2, (int)(skewedProportionY * fftSize / 2));
-			auto level = jmap(fftData[fftDataIndex], 0.0f, jmax(maxLevel.getEnd(), 1e-5f), 0.0f, 1.0f);
+			spectrogramImage.moveImageSection(0, 0, 1, 0, rightHandEdge, imageHeight);
 
-			spectrogramImage.setPixelAt(rightHandEdge, y, Colour::fromHSV(level, 1.0f, level, 1.0f));
+			float datablock[2 * fftSize];
+			for (int t = 0; t < 2 * fftSize; ++t)
+			{
+				datablock[t] = entireAudio[i][t];
+			}
+
+			//img processing lol
+			auto maxLevel = FloatVectorOperations::findMinAndMax(datablock, fftSize / 2);
+
+			for (auto y = 1; y < imageHeight; ++y)
+			{
+				auto skewedProportionY = 1.0f - std::exp(std::log(y / (float)imageHeight) * 0.2f);
+				auto fftDataIndex = jlimit(0, fftSize / 2, (int)(skewedProportionY * fftSize / 2));
+				auto level = jmap(datablock[fftDataIndex], 0.0f, jmax(maxLevel.getEnd(), 1e-5f), 0.0f, 1.0f);
+
+				spectrogramImage.setPixelAt(rightHandEdge, y, Colour::fromHSV(level, 1.0f, level, 1.0f));
+			}
 		}
+
+		
 	}
 
 	enum
@@ -83,6 +98,7 @@ public:
 		fftSize = 1 << fftOrder
 	};
 
+	Array<Array<float>> entireAudio;
 private:
 	dsp::FFT forwardFFT;
 	Image spectrogramImage;
@@ -91,6 +107,8 @@ private:
 	float fftData[2 * fftSize];
 	int fifoIndex = 0;
 	bool nextFFTBlockReady = false;
+
+	
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FFTComponent)
 };

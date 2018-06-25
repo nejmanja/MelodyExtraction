@@ -7,7 +7,7 @@
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainComponent   : public AudioAppComponent, public Button::Listener, public ChangeListener
+class MainComponent   : public AudioAppComponent, public Button::Listener, public ChangeListener, private Timer
 {
 public:
     //==============================================================================
@@ -17,27 +17,20 @@ public:
 		openButton.setButtonText("Open...");
 		openButton.addListener(this);
 
-		addAndMakeVisible(playButton);
-		playButton.setButtonText("Play");
-		playButton.setColour(TextButton::buttonColourId, Colours::green);
-		playButton.addListener(this);
-		playButton.setEnabled(false);
-
-		addAndMakeVisible(stopButton);
-		stopButton.setButtonText("Stop");
-		stopButton.setColour(TextButton::buttonColourId, Colours::red);
-		stopButton.addListener(this);
-		stopButton.setEnabled(false);
-
 		addAndMakeVisible(getBlockButton);
 		getBlockButton.setButtonText("preform fft on block");
 		getBlockButton.setColour(TextButton::buttonColourId, Colours::purple);
 		getBlockButton.addListener(this);
 		getBlockButton.setEnabled(false);
 
+		addAndMakeVisible(despacito);
+		despacito.setText((String)123, dontSendNotification);
+
 		formatManager.registerBasicFormats();
 
 		addAndMakeVisible(fftComp);
+
+		
 
         setSize (800, 300);
         //setAudioChannels (0, 1);
@@ -71,17 +64,12 @@ public:
 				{
 					fileBuffer.setSize(reader->numChannels, (int)reader->lengthInSamples);
 					reader->read(&fileBuffer, 0, (int)reader->lengthInSamples, 0, true, true);
-					position = 0;
 					setAudioChannels(0, reader->numChannels);
+					__FILESAMPLERATE = reader->sampleRate;
+					despacito.setText("Sample rate: " + (String)__FILESAMPLERATE, dontSendNotification);
 					getBlockButton.setEnabled(true);
 				}
 			}
-		}
-		else if (button == &playButton)
-		{
-		}
-		else if (button == &stopButton)
-		{
 		}
 		else if (button == &getBlockButton)
 		{
@@ -97,47 +85,17 @@ public:
 
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
     {
-		
-		int numInputChannels = fileBuffer.getNumChannels();
-		int numOutputChannels = bufferToFill.buffer->getNumChannels();
 
-		int outputSamplesRemaining = bufferToFill.numSamples;
-		int outputSamplesOffset = bufferToFill.startSample;
-
-		while (outputSamplesRemaining > 0)
-		{
-			int bufferSamplesRemaining = fileBuffer.getNumSamples() - position;
-			int samplesThisTime = jmin(outputSamplesRemaining, bufferSamplesRemaining);
-
-			for (int channel = 0; channel < numOutputChannels; ++channel)
-			{
-				bufferToFill.buffer->copyFrom(channel,
-					outputSamplesOffset,
-					fileBuffer,
-					channel % numInputChannels,
-					position,
-					samplesThisTime);
-
-
-
-			}
-
-			outputSamplesRemaining -= samplesThisTime;
-			outputSamplesOffset += samplesThisTime;
-			position += samplesThisTime;
-
-			if (position == fileBuffer.getNumSamples())
-				position = 0;
-
-			
-		}
     }
 
     void releaseResources() override
 	{
 		//transportSource.releaseResources();
     }
-
+	void timerCallback() override
+	{
+		preformFFTOnBlock();
+	}
     //==============================================================================
     void paint (Graphics& g) override
     {
@@ -152,26 +110,36 @@ public:
 		fftComp.setBounds(window.removeFromRight(getWidth() / 2));
 
 		openButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
-		playButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
-		stopButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
+		despacito.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
+		//stopButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
 		getBlockButton.setBounds(window.reduced(5));
     }
 
 	void preformFFTOnBlock()
 	{
-		for (int i = 0; i < fftComp.fftSize; ++i)
+		//todo change to preform the whole thing at once
+		for (int t = 0; t < fileBuffer.getNumSamples(); ++t)
+		{
+			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t));
+		}
+
+		despacito.setText(despacito.getText() + " \nAmount of samples/blocks: " + (String)fileBuffer.getNumSamples() + "/" + (String)fftComp.entireAudio.size(),
+			dontSendNotification);
+
+		fftComp.drawNextLineOfSpectrogram();
+		/*for (int i = 0; i < fftComp.fftSize; ++i)
 		{
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, i + samplePos));
-		}
-		samplePos += fftComp.fftSize;
-		if (samplePos >= fileBuffer.getNumSamples())
-			samplePos = 0;
+		}*/
+		
+
+		
 	}
 
 private:
     //==============================================================================
     // Your private member variables go here...
-
+	double __FILESAMPLERATE;
 	TextButton openButton, playButton, stopButton, getBlockButton;
 
 	AudioFormatManager formatManager;
@@ -179,8 +147,7 @@ private:
 
 	AudioSampleBuffer fileBuffer;
 
-	int position = 0;
-	int samplePos = 0;
+	Label despacito;
 
 	FFTComponent fftComp;
 
