@@ -43,6 +43,7 @@ public:
 			Array<float> fftArray;
 			fftArray.addArray(fftData, 2 * fftSize);
 			entireAudio.add(fftArray);
+			
 
 			fifoIndex = 0;
 		}

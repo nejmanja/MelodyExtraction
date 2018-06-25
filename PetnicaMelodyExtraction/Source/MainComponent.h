@@ -127,13 +127,6 @@ public:
 			dontSendNotification);
 
 		fftComp.drawNextLineOfSpectrogram();
-		/*for (int i = 0; i < fftComp.fftSize; ++i)
-		{
-			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, i + samplePos));
-		}*/
-		
-
-		
 	}
 
 private:
