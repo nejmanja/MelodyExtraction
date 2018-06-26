@@ -2,7 +2,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#define _QTR 96
+#define _QTR 59200
 
 #define _BAR _QTR*4
 #define _HALF _QTR*2

@@ -99,6 +99,10 @@ public:
 
 				textLog.moveCaretToEnd();
 				textLog.insertTextAtCaret("\n MaxFreq:" + (String)songContour.getLast().getFreq());
+
+				prevNoteDistance = roundedDistance;
+				midiComp.addNoteToSequence(prevNoteDistance + 69/*A4 in midi*/, prevNoteBeginning, songContour.size()*fftSize* 2 - prevNoteBeginning);
+				prevNoteBeginning = songContour.size()*fftSize* 2;
 			}
 
 			
@@ -173,7 +177,7 @@ public:
 	{
 		float maxFreq = findMaximum(fftData, fftSize / 2);
 		float minFreq = findMinimum(fftData, fftSize / 2);
-		float thresFactor = 0.7f; //lol
+		float thresFactor = 0.95f; //lol
 		float threshold = (maxFreq - minFreq) * thresFactor;
 
 		
@@ -253,20 +257,21 @@ public:
 	};
 
 	Array<PitchContour> songContour;
+	MidiOutputComponent midiComp;
 
 private:
 	dsp::FFT forwardFFT;
 	Image spectrogramImage;
 	TextEditor textLog;
 
-	MidiOutputComponent midiComp;
+	
 
 	float fifo[fftSize];
 	float fftData[2 * fftSize];
 	int fifoIndex = 0;
 	bool nextFFTBlockReady = false;
 
-	String prevNote = "X";
+	String prevNote = "X"; int prevNoteDistance = 0; int prevNoteBeginning = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FFTComponent)
 };

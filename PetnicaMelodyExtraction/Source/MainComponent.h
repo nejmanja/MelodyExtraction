@@ -118,12 +118,15 @@ public:
 
 	void preformFFTOnBlock()
 	{
-		//todo change to preform the whole thing at once
+		//todo change to preform the whole thing at once i done did it lol should delet dis comment
 		filter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		for (int t = 0; t < fileBuffer.getNumSamples(); ++t)
 		{
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t), __FILESAMPLERATE);
 		}
+
+		fftComp.midiComp.finishTrack(fftComp.songContour.size()*fftComp.fftSize*2);
+		fftComp.midiComp.writeToFile("C:\\Users\\Milanovic\\Music\\output.mid");
 
 		despacito.setText(despacito.getText() + " \nAmount of samples: " + (String)fileBuffer.getNumSamples(),
 			dontSendNotification);
