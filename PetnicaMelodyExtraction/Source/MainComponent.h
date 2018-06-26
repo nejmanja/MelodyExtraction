@@ -127,13 +127,13 @@ public:
 		for (int t = 0; t < fileBuffer.getNumSamples(); ++t)
 		{
 			
-			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t));
+			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t), __FILESAMPLERATE);
 		}
 
-		despacito.setText(despacito.getText() + " \nAmount of samples/blocks: " + (String)fileBuffer.getNumSamples() + "/" + (String)fftComp.entireAudio.size(),
+		despacito.setText(despacito.getText() + " \nAmount of samples: " + (String)fileBuffer.getNumSamples(),
 			dontSendNotification);
-
-		fftComp.drawNextLineOfSpectrogram();
+		despacito.setText(despacito.getText() + " \n Amount of contours: " + (String)fftComp.songContour.size(), dontSendNotification);
+		//fftComp.drawNextLineOfSpectrogram();
 	}
 
 private:
