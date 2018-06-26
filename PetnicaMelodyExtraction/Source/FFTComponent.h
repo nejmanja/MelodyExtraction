@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "MidiOutputComponent.h"
 
 #define _F0 440 //A4=440Hz
 #define _A 1.0594630943592952645618252949463 //2^(1/12) 
@@ -50,6 +51,9 @@ public:
 		textLog.setColour(TextEditor::backgroundColourId, Colour(0x32ffffff));
 		textLog.setColour(TextEditor::outlineColourId, Colour(0x1c000000));
 		textLog.setColour(TextEditor::shadowColourId, Colour(0x16000000));
+
+		addAndMakeVisible(midiComp);
+		midiComp.setUpTrack(4, 4, 500000);
 	}
 
 	~FFTComponent()
@@ -254,6 +258,8 @@ private:
 	dsp::FFT forwardFFT;
 	Image spectrogramImage;
 	TextEditor textLog;
+
+	MidiOutputComponent midiComp;
 
 	float fifo[fftSize];
 	float fftData[2 * fftSize];
