@@ -83,14 +83,21 @@ public:
 			forwardFFT.performFrequencyOnlyForwardTransform(fftData);
 
 			pushContourIntoArray(smpRate);
-			textLog.moveCaretToEnd();
-			textLog.insertTextAtCaret("\n MaxFreq:" + (String)songContour.getLast().getFreq());
 
 			int roundedDistance = roundToInt(log(songContour.getLast().getFreq() / _F0) / log(_A));
 
-			textLog.moveCaretToEnd();
-			textLog.insertTextAtCaret("\nDist in semitones: " + (String)roundedDistance
-				+ " Note: " + findNoteFromDistance(roundedDistance));
+			if (findNoteFromDistance(roundedDistance) != prevNote)
+			{
+				textLog.moveCaretToEnd();
+				textLog.insertTextAtCaret("\nDist in semitones: " + (String)roundedDistance
+					+ " Note: " + findNoteFromDistance(roundedDistance));
+				prevNote = findNoteFromDistance(roundedDistance);
+
+				textLog.moveCaretToEnd();
+				textLog.insertTextAtCaret("\n MaxFreq:" + (String)songContour.getLast().getFreq());
+			}
+
+			
 			fifoIndex = 0;
 		}
 		fifo[fifoIndex++] = sample;
@@ -160,17 +167,48 @@ public:
 
 	void pushContourIntoArray(double smpRate)
 	{
-		//TODO: add harmonic sum instead of pure max
 		float maxFreq = findMaximum(fftData, fftSize / 2);
+		float minFreq = findMinimum(fftData, fftSize / 2);
+		float thresFactor = 0.7f; //lol
+		float threshold = (maxFreq - minFreq) * thresFactor;
+
+		
+		//for each freq over the tresh, find all present notable harmonics, take one with largest sum
+		
+		int mostPresentFreq = 0;
+		float largestSum = 0;
+
 		for (int i = 0; i < fftSize / 2; ++i)
 		{
-			if (fftData[i] == maxFreq)
+			if (fftData[i] >= threshold) //if it's present enough
 			{
-				PitchContour newContour(i, smpRate, fftSize);
-				songContour.add(newContour);
-				break;
+				float sum = fftData[i];
+
+				int x = 2;
+				int FIndex = x*i;
+				float baseFreq = i * smpRate / fftSize;
+				float freq = 2 * baseFreq;
+				while (freq < 10000) //i guess
+				{
+					if (fftData[FIndex] >= threshold)
+					{
+						sum += fftData[FIndex];
+					}
+					
+					if (sum >= largestSum)
+					{
+						largestSum = sum; //this is the most present
+						mostPresentFreq = i; //at this index
+					}
+
+					x++;
+					FIndex = x * i;
+					freq = baseFreq * FIndex;
+				}
 			}
 		}
+		PitchContour newContour(mostPresentFreq, smpRate, fftSize);
+		songContour.add(newContour);
 	}
 
 	void timerCallback() override
@@ -222,7 +260,7 @@ private:
 	int fifoIndex = 0;
 	bool nextFFTBlockReady = false;
 
-	
+	String prevNote = "X";
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FFTComponent)
 };
