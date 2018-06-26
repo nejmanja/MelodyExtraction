@@ -69,7 +69,6 @@ public:
 	void resized() override
 	{
 		Rectangle<int> window = getLocalBounds();
-		//despacito2.setBounds(0, 0, 200, 200);
 		textLog.setBounds(window.removeFromLeft(getWidth() / 2));
 
 	}
@@ -99,45 +98,61 @@ public:
 
 	String findNoteFromDistance(int distance)
 	{
+		short octNum;
+		if (distance < -33)
+			octNum = 1;
+		else if (distance < -21)
+			octNum = 2;
+		else if (distance < -9)
+			octNum = 3;
+		else if (distance < 3)
+			octNum = 4;
+		else if (distance < 15)
+			octNum = 5;
+		else if (distance < 27)
+			octNum = 6;
+		else if (distance < 39)
+			octNum = 7;
+
 		int distMod = distance % 12;
 		switch (distMod)
 		{
 		case 0:
-			return "A";
+			return "A" + (String)octNum;
 		case -11:
 		case 1:
-			return "A#";
+			return "A#" + (String)octNum;
 		case -10:
 		case 2:
-			return "B";
+			return "B" + (String)octNum;
 		case -9:
 		case 3:
-			return "C";
+			return "C" + (String)octNum;
 		case -8:
 		case 4:
-			return "C#";
+			return "C#" + (String)octNum;
 		case -7:
 		case 5:
-			return "D";
+			return "D" + (String)octNum;
 		case -6:
 		case 6:
-			return "D#";
+			return "D#" + (String)octNum;
 			break;
 		case -5:
 		case 7:
-			return "E";
+			return "E" + (String)octNum;
 		case -4:
 		case 8:
-			return "F";
+			return "F" + (String)octNum;
 		case -3:
 		case 9:
-			return "F#";
+			return "F#" + (String)octNum;
 		case -2:
 		case 10:
-			return "G";
+			return "G" + (String)octNum;
 		case -1:
 		case 11:
-			return "G#";
+			return "G#" + (String)octNum;
 		default:
 			return "Koj kurac druze";
 		}
@@ -191,11 +206,9 @@ public:
 
 	enum
 	{
-		fftOrder = 11,
+		fftOrder = 12,
 		fftSize = 1 << fftOrder
 	};
-
-	
 
 	Array<PitchContour> songContour;
 

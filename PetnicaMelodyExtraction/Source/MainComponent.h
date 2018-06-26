@@ -32,8 +32,7 @@ public:
 
 		
 
-        setSize (800, 300);
-        //setAudioChannels (0, 1);
+        setSize (1200, 300);
     }
 
     ~MainComponent()
@@ -70,7 +69,7 @@ public:
 					__FILESAMPLERATE = reader->sampleRate;
 					despacito.setText("Sample rate: " + (String)__FILESAMPLERATE, dontSendNotification);
 
-					filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, 500, 1.5));
+					filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, 2500, 1.5));
 					filter.setCoefficients(filterCoefficients);
 					getBlockButton.setEnabled(true);
 				}
@@ -95,7 +94,6 @@ public:
 
     void releaseResources() override
 	{
-		//transportSource.releaseResources();
     }
 	void timerCallback() override
 	{
@@ -104,7 +102,6 @@ public:
     //==============================================================================
     void paint (Graphics& g) override
     {
-        // (Our component is opaque, so we must completely fill the background with a solid colour)
         g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
     }
 
@@ -112,11 +109,10 @@ public:
     {
 		Rectangle<int> window = getLocalBounds();
 
-		fftComp.setBounds(window.removeFromRight(getWidth() / 2));
+		fftComp.setBounds(window.removeFromRight(getWidth() * 2 / 3));
 
 		openButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
 		despacito.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
-		//stopButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
 		getBlockButton.setBounds(window.reduced(5));
     }
 
@@ -126,7 +122,6 @@ public:
 		filter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		for (int t = 0; t < fileBuffer.getNumSamples(); ++t)
 		{
-			
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t), __FILESAMPLERATE);
 		}
 
