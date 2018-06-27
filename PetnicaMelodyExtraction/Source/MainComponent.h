@@ -23,8 +23,47 @@ public:
 		getBlockButton.addListener(this);
 		getBlockButton.setEnabled(false);
 
+		addAndMakeVisible(lpCutoff);
+		lpCutoff.setSliderStyle(Slider::SliderStyle::LinearVertical);
+		lpCutoff.setRange(0.0, 500.0);
+		lpCutoff.setValue(275.0, dontSendNotification);
+		lpCutoff.setSkewFactorFromMidPoint(275.0);
+		lpCutoff.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+		addAndMakeVisible(lpCutoffLabel);
+		lpCutoffLabel.attachToComponent(&lpCutoff, false);
+		lpCutoffLabel.setText("LP Cutoff", dontSendNotification);
+
+		addAndMakeVisible(hpCutoff);
+		hpCutoff.setSliderStyle(Slider::SliderStyle::LinearVertical);
+		hpCutoff.setRange(1500.0, 10000.0);
+		hpCutoff.setValue(4500.0, dontSendNotification);
+		hpCutoff.setSkewFactorFromMidPoint(5000.0);
+		hpCutoff.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+		addAndMakeVisible(hpCutoffLabel);
+		hpCutoffLabel.attachToComponent(&hpCutoff, false);
+		hpCutoffLabel.setText("HP Cutoff", dontSendNotification);
+
+		addAndMakeVisible(hpQ);
+		hpQ.setSliderStyle(Slider::SliderStyle::LinearVertical);
+		hpQ.setRange(0.1, 25.0);
+		hpQ.setValue(1.5, dontSendNotification);
+		hpQ.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+		addAndMakeVisible(hpQLabel);
+		hpQLabel.attachToComponent(&hpQ, false);
+		hpQLabel.setText("HP Q", dontSendNotification);
+
+		addAndMakeVisible(lpQ);
+		lpQ.setSliderStyle(Slider::SliderStyle::LinearVertical);
+		lpQ.setRange(0.1, 25.0);
+		lpQ.setValue(0.8, dontSendNotification);
+		lpQ.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+		addAndMakeVisible(lpQLabel);
+		lpQLabel.attachToComponent(&lpQ, false);
+		lpQLabel.setText("LP Q", dontSendNotification);
+
 		addAndMakeVisible(despacito);
-		despacito.setText((String)123, dontSendNotification);
+		despacito.setText("Waiting for file input...", dontSendNotification);
+		
 
 		formatManager.registerBasicFormats();
 
@@ -70,29 +109,24 @@ public:
 					despacito.setText("Sample rate: " + (String)__FILESAMPLERATE, dontSendNotification);
 
 					//TODO: add peak filter and make variables adjustable in the UI
-					filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, 4500, 1.5));
-					lpFilter.setCoefficients(filterCoefficients);
-					filterCoefficients = IIRCoefficients(IIRCoefficients::makeHighPass(__FILESAMPLERATE, 275, 0.8));
-					hpFilter.setCoefficients(filterCoefficients);
+					
 					getBlockButton.setEnabled(true);
 				}
 			}
 		}
 		else if (button == &getBlockButton)
 		{
-			preformFFTOnBlock();
+			preformFFTOnAudio();
 		}
 	}
 
     //==============================================================================
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
     {
-		
     }
 
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
     {
-
     }
 
     void releaseResources() override
@@ -100,7 +134,7 @@ public:
     }
 	void timerCallback() override
 	{
-		preformFFTOnBlock();
+		preformFFTOnAudio();
 	}
     //==============================================================================
     void paint (Graphics& g) override
@@ -113,15 +147,35 @@ public:
 		Rectangle<int> window = getLocalBounds();
 
 		fftComp.setBounds(window.removeFromRight(getWidth() * 2 / 3));
+		int textBoxOffset = 10;
+
+		Rectangle<int> sliderArea = window.removeFromRight(window.getWidth() / 2);
+		Rectangle<int> lpArea = sliderArea.removeFromTop(sliderArea.getHeight() / 2);
+		lpCutoff.setBounds(lpArea.removeFromLeft(lpArea.getWidth() / 2).reduced(5));
+		lpCutoffLabel.setTopLeftPosition(lpCutoff.getPosition().getX(), 
+			lpCutoff.getPosition().getY() - textBoxOffset);
+		lpQ.setBounds(lpArea.reduced(5));
+		lpQLabel.setTopLeftPosition(lpQ.getPosition().getX(),
+			lpQ.getPosition().getY() - textBoxOffset);
+		hpCutoff.setBounds(sliderArea.removeFromLeft(sliderArea.getWidth() / 2).reduced(5));
+		hpCutoffLabel.setTopLeftPosition(hpCutoff.getPosition().getX(),
+			hpCutoff.getPosition().getY() - textBoxOffset);
+		hpQ.setBounds(sliderArea.reduced(5));
+		hpQLabel.setTopLeftPosition(hpQ.getPosition().getX(),
+			hpQ.getPosition().getY() - textBoxOffset);
 
 		openButton.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
-		despacito.setBounds(window.removeFromTop(getHeight() / 4).reduced(5));
+		despacito.setBounds(window.removeFromTop(getHeight() / 2).reduced(5));
 		getBlockButton.setBounds(window.reduced(5));
     }
 
-	void preformFFTOnBlock()
+	void preformFFTOnAudio()
 	{
-		//todo change to preform the whole thing at once i done did it lol should delet dis comment
+		filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, lpCutoff.getValue(), lpQ.getValue()));
+		lpFilter.setCoefficients(filterCoefficients);
+		filterCoefficients = IIRCoefficients(IIRCoefficients::makeHighPass(__FILESAMPLERATE, hpCutoff.getValue(), hpQ.getValue()));
+		hpFilter.setCoefficients(filterCoefficients);
+
 		lpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		hpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		for (int t = 0; t < fileBuffer.getNumSamples(); ++t)
@@ -132,6 +186,8 @@ public:
 		fftComp.midiComp.finishTrack(fftComp.songContour.size()*fftComp.fftSize*2);
 		fftComp.midiComp.writeToFile("C:\\Users\\Milanovic\\Music\\output.mid");
 
+		despacito.setText(despacito.getText() + "\nSuccessfully exported MIDI file with filters: LP:" + (String)lpCutoff.getValue() + "/" + (String)lpQ.getValue() +
+			" HP:" + (String)hpCutoff.getValue() + "/" + (String)hpQ.getValue() ,dontSendNotification);
 		despacito.setText(despacito.getText() + " \nAmount of samples: " + (String)fileBuffer.getNumSamples(),
 			dontSendNotification);
 		despacito.setText(despacito.getText() + " \n Amount of contours: " + (String)fftComp.songContour.size(), dontSendNotification);
@@ -152,7 +208,8 @@ private:
 	IIRFilter hpFilter;
 	IIRCoefficients filterCoefficients;
 
-	Label despacito;
+	Label despacito, hpCutoffLabel, lpCutoffLabel, hpQLabel, lpQLabel;
+	Slider hpCutoff, lpCutoff, hpQ, lpQ;
 
 	FFTComponent fftComp;
 
