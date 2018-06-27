@@ -69,8 +69,11 @@ public:
 					__FILESAMPLERATE = reader->sampleRate;
 					despacito.setText("Sample rate: " + (String)__FILESAMPLERATE, dontSendNotification);
 
-					filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, 2500, 1.5));
-					filter.setCoefficients(filterCoefficients);
+					//TODO: add peak filter and make variables adjustable in the UI
+					filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, 4500, 1.5));
+					lpFilter.setCoefficients(filterCoefficients);
+					filterCoefficients = IIRCoefficients(IIRCoefficients::makeHighPass(__FILESAMPLERATE, 275, 0.8));
+					hpFilter.setCoefficients(filterCoefficients);
 					getBlockButton.setEnabled(true);
 				}
 			}
@@ -119,7 +122,8 @@ public:
 	void preformFFTOnBlock()
 	{
 		//todo change to preform the whole thing at once i done did it lol should delet dis comment
-		filter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
+		lpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
+		hpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		for (int t = 0; t < fileBuffer.getNumSamples(); ++t)
 		{
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t), __FILESAMPLERATE);
@@ -144,7 +148,8 @@ private:
 	std::unique_ptr<AudioFormatReaderSource> readerSource;
 	AudioSampleBuffer fileBuffer;
 
-	IIRFilter filter;
+	IIRFilter lpFilter;
+	IIRFilter hpFilter;
 	IIRCoefficients filterCoefficients;
 
 	Label despacito;
