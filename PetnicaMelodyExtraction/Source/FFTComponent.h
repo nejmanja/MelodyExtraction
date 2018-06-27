@@ -44,7 +44,7 @@ public:
 		addAndMakeVisible(textLog);
 		textLog.setMultiLine(true);
 		textLog.setReturnKeyStartsNewLine(true);
-		textLog.setReadOnly(true);
+		textLog.setReadOnly(false);
 		textLog.setScrollbarsShown(true);
 		textLog.setCaretVisible(false);
 		textLog.setPopupMenuEnabled(true);
