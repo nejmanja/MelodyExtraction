@@ -101,8 +101,8 @@ public:
 				textLog.insertTextAtCaret("\n MaxFreq:" + (String)songContour.getLast().getFreq());
 
 				prevNoteDistance = roundedDistance;
-				midiComp.addNoteToSequence(prevNoteDistance + 69/*A4 in midi*/, prevNoteBeginning, songContour.size()*fftSize* 2 - prevNoteBeginning);
-				prevNoteBeginning = songContour.size()*fftSize* 2;
+				midiComp.addNoteToSequence(prevNoteDistance + 69/*A4 in midi*/, prevNoteBeginning, songContour.size()*fftSize* 3 - prevNoteBeginning);
+				prevNoteBeginning = songContour.size()*fftSize*3;
 			}
 
 			
