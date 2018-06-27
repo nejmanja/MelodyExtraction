@@ -26,7 +26,7 @@ public:
 		addAndMakeVisible(lpCutoff);
 		lpCutoff.setSliderStyle(Slider::SliderStyle::LinearVertical);
 		lpCutoff.setRange(0.0, 500.0);
-		lpCutoff.setValue(275.0, dontSendNotification);
+		lpCutoff.setValue(225, dontSendNotification);
 		lpCutoff.setSkewFactorFromMidPoint(275.0);
 		lpCutoff.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 		addAndMakeVisible(lpCutoffLabel);
@@ -171,13 +171,14 @@ public:
 
 	void preformFFTOnAudio()
 	{
-		filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, lpCutoff.getValue(), lpQ.getValue()));
-		lpFilter.setCoefficients(filterCoefficients);
-		filterCoefficients = IIRCoefficients(IIRCoefficients::makeHighPass(__FILESAMPLERATE, hpCutoff.getValue(), hpQ.getValue()));
-		hpFilter.setCoefficients(filterCoefficients);
+		//filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, lpCutoff.getValue(), lpQ.getValue()));
+		lpFilter.setCoefficients(IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, lpCutoff.getValue(), lpQ.getValue())));
+		hpFilter.setCoefficients(IIRCoefficients(IIRCoefficients::makeHighPass(__FILESAMPLERATE, hpCutoff.getValue(), hpQ.getValue())));
+		peakFilter.setCoefficients(IIRCoefficients::makePeakFilter(__FILESAMPLERATE, 520, 1.5, 1.5));
 
 		lpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		hpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
+		peakFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		for (int t = 0; t < fileBuffer.getNumSamples(); ++t)
 		{
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t), __FILESAMPLERATE);
@@ -206,6 +207,7 @@ private:
 
 	IIRFilter lpFilter;
 	IIRFilter hpFilter;
+	IIRFilter peakFilter;
 	IIRCoefficients filterCoefficients;
 
 	Label despacito, hpCutoffLabel, lpCutoffLabel, hpQLabel, lpQLabel;

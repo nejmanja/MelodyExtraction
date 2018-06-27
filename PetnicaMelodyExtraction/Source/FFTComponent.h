@@ -186,7 +186,7 @@ public:
 		int mostPresentFreq = 0;
 		float largestSum = 0;
 
-		for (int i = 0; i < fftSize / 2; ++i)
+		for (int i = 1; i < fftSize / 2; ++i)
 		{
 			if (fftData[i] >= threshold) //if it's present enough
 			{
