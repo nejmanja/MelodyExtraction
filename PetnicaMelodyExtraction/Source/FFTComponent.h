@@ -22,7 +22,6 @@ public:
 
 	PitchContour()
 	{
-
 	}
 
 	double getFreq()
@@ -111,6 +110,33 @@ public:
 		fifo[fifoIndex++] = sample;
 	}
 
+	void findMelodyRange()
+	{
+		/*
+		Find where the average melody lies, then setup threshold
+		and remove mistaken notes or switch octaevs when there are
+		the same notes/diff octaves present next to the mistakes
+		*/
+		float avgFreq = 0;
+		float min = 22000, max = 0;
+
+		for (int i = 0; i < songContour.size(); ++i)
+		{
+			double currentFreq = songContour[i].getFreq();
+			//summing for average
+			avgFreq += currentFreq;
+
+			if (currentFreq > max)
+				max = currentFreq;
+			if (currentFreq < min)
+				min = currentFreq;
+		}
+		avgFreq /= songContour.size();
+		
+		//maybe sort by octaves and count which octave contains most notes??
+
+	}
+
 	String findNoteFromDistance(int distance)
 	{
 		short octNum;
@@ -172,6 +198,8 @@ public:
 			return "Koj kurac druze";
 		}
 	}
+
+
 
 	void pushContourIntoArray(double smpRate)
 	{
