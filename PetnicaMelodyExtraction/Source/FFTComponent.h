@@ -177,7 +177,7 @@ public:
 	{
 		float maxFreq = findMaximum(fftData, fftSize / 2);
 		float minFreq = findMinimum(fftData, fftSize / 2);
-		float thresFactor = 0.95f; //lol
+		float thresFactor = 0.5f; //0.5f seems to give the best results
 		float threshold = (maxFreq - minFreq) * thresFactor;
 
 		
@@ -191,6 +191,9 @@ public:
 			if (fftData[i] >= threshold) //if it's present enough
 			{
 				float sum = fftData[i];
+
+				
+				sum += fftData[i * 3 / 2];
 
 				int x = 2;
 				int FIndex = x*i;
