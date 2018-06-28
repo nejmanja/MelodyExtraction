@@ -93,7 +93,7 @@ public:
 			forwardFFT.performFrequencyOnlyForwardTransform(fftData);
 
 			pushContourIntoArray(smpRate);
-
+			/*
 			int roundedDistance = roundToInt(log(songContour.getLast().getFreq() / _F0) / log(_A));
 
 			if (findNoteFromDistance(roundedDistance) != prevNote)
@@ -107,11 +107,11 @@ public:
 				textLog.insertTextAtCaret("\n MaxFreq:" + (String)songContour.getLast().getFreq());
 
 				prevNoteDistance = roundedDistance;
-				midiComp.addNoteToSequence(prevNoteDistance + 69/*A4 in midi*/, prevNoteBeginning, songContour.size()*fftSize* 3 - prevNoteBeginning);
+				midiComp.addNoteToSequence(prevNoteDistance + 69 , prevNoteBeginning, songContour.size()*fftSize * 3 - prevNoteBeginning);
 				prevNoteBeginning = songContour.size()*fftSize*3;
 			}
-
 			
+			*/
 			fifoIndex = 0;
 		}
 		fifo[fifoIndex++] = sample;
@@ -119,6 +119,9 @@ public:
 
 	void findMelodyRange()
 	{
+		Array<int> midiNotes;
+		Array<int> midiNoteDurations;
+		Array<int> midiNoteStarts;
 		/*
 		Find where the average melody lies, then setup threshold
 		and remove mistaken notes or switch octaevs when there are
@@ -126,15 +129,31 @@ public:
 		*/
 		int histogramArr[128] = { 0 };
 		int prevNote = -1;
+
 		for (int i = 0; i < songContour.size(); ++i)
 		{
 			if (songContour[i].getMidiNote() != prevNote)
 			{
 				histogramArr[songContour[i].getMidiNote()]++; //currently passess every block, might try to only place changes
 				prevNote = songContour[i].getMidiNote();
+				midiNotes.add(songContour[i].getMidiNote());
+				midiNoteStarts.add(i * fftSize * 3);
+
+				textLog.moveCaretToEnd();
+				textLog.insertTextAtCaret((String)songContour[i].getMidiNote() + "\n");
 			}
-			
 		}
+
+		int prevNoteBeginning = 0;
+		for (int i = 0; i < midiNotes.size() - 1; ++i)
+		{
+			midiComp.addNoteToSequence(midiNotes[i], midiNoteStarts[i], midiNoteStarts[i+1] - midiNoteStarts[i]);
+		}
+		midiComp.addNoteToSequence(midiNotes[midiNotes.size() - 1], midiNoteStarts[midiNotes.size() - 1], songContour.size()*fftSize * 3 - midiNoteStarts[midiNotes.size() - 1]);
+		midiComp.finishTrack(songContour.size()*fftSize*3);
+		
+		int mostPresentNote = findMaximum(histogramArr, 128);
+		float deletionThres = mostPresentNote * 0.68f; //lol
 
 		for (int i = 0; i < 128; ++i)
 		{

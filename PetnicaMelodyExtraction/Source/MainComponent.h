@@ -184,10 +184,9 @@ public:
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t), __FILESAMPLERATE);
 		}
 
-		fftComp.midiComp.finishTrack(fftComp.songContour.size()*fftComp.fftSize*3);
-		fftComp.midiComp.writeToFile("C:\\Users\\Milanovic\\Music\\output.mid");
-
 		fftComp.findMelodyRange();
+		//fftComp.midiComp.finishTrack(fftComp.songContour.size() * fftComp.fftSize * 3);
+		fftComp.midiComp.writeToFile("C:\\Users\\Milanovic\\Music\\output.mid");
 
 		despacito.setText(despacito.getText() + "\nSuccessfully exported MIDI file with filters: LP:" + (String)lpCutoff.getValue() + "/" + (String)lpQ.getValue() +
 			" HP:" + (String)hpCutoff.getValue() + "/" + (String)hpQ.getValue() ,dontSendNotification);
