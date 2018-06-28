@@ -18,6 +18,8 @@ public:
 	PitchContour(int newIndex, double smpRate, int fftSize) : fftIndex(newIndex)
 	{
 		frequency = (fftIndex * smpRate) / fftSize;
+		int distanceFromA4 = roundToInt(log(frequency / _F0) / log(_A));
+		midiNote = distanceFromA4 + 69;
 	}
 
 	PitchContour()
@@ -28,9 +30,14 @@ public:
 	{
 		return frequency;
 	}
+	int getMidiNote()
+	{
+		return midiNote;
+	}
 
 private:
 	int fftIndex;
+	int midiNote;
 	double frequency;
 };
 
@@ -117,24 +124,23 @@ public:
 		and remove mistaken notes or switch octaevs when there are
 		the same notes/diff octaves present next to the mistakes
 		*/
-		float avgFreq = 0;
-		float min = 22000, max = 0;
-
+		int histogramArr[128] = { 0 };
+		int prevNote = -1;
 		for (int i = 0; i < songContour.size(); ++i)
 		{
-			double currentFreq = songContour[i].getFreq();
-			//summing for average
-			avgFreq += currentFreq;
-
-			if (currentFreq > max)
-				max = currentFreq;
-			if (currentFreq < min)
-				min = currentFreq;
+			if (songContour[i].getMidiNote() != prevNote)
+			{
+				histogramArr[songContour[i].getMidiNote()]++; //currently passess every block, might try to only place changes
+				prevNote = songContour[i].getMidiNote();
+			}
+			
 		}
-		avgFreq /= songContour.size();
-		
-		//maybe sort by octaves and count which octave contains most notes??
 
+		for (int i = 0; i < 128; ++i)
+		{
+			textLog.moveCaretToEnd();
+			textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
+		}
 	}
 
 	String findNoteFromDistance(int distance)

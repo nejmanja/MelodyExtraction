@@ -187,6 +187,8 @@ public:
 		fftComp.midiComp.finishTrack(fftComp.songContour.size()*fftComp.fftSize*3);
 		fftComp.midiComp.writeToFile("C:\\Users\\Milanovic\\Music\\output.mid");
 
+		fftComp.findMelodyRange();
+
 		despacito.setText(despacito.getText() + "\nSuccessfully exported MIDI file with filters: LP:" + (String)lpCutoff.getValue() + "/" + (String)lpQ.getValue() +
 			" HP:" + (String)hpCutoff.getValue() + "/" + (String)hpQ.getValue() ,dontSendNotification);
 		despacito.setText(despacito.getText() + " \nAmount of samples: " + (String)fileBuffer.getNumSamples(),
