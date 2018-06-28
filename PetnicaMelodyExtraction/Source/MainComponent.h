@@ -62,6 +62,33 @@ public:
 		lpQLabel.attachToComponent(&lpQ, false);
 		lpQLabel.setText("LP Q", dontSendNotification);
 
+		addAndMakeVisible(peakFreq);
+		peakFreq.setSliderStyle(Slider::SliderStyle::LinearVertical);
+		peakFreq.setRange(200.0, 10000.0);
+		peakFreq.setValue(590.0, dontSendNotification);
+		peakFreq.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+		addAndMakeVisible(peakFreqLabel);
+		peakFreqLabel.attachToComponent(&peakFreq, false);
+		peakFreqLabel.setText("PF freq", dontSendNotification);
+
+		addAndMakeVisible(peakQ);
+		peakQ.setSliderStyle(Slider::SliderStyle::LinearVertical);
+		peakQ.setRange(0.5, 3);
+		peakQ.setValue(1.5, dontSendNotification);
+		peakQ.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+		addAndMakeVisible(peakQLabel);
+		peakQLabel.attachToComponent(&peakQ, false);
+		peakQLabel.setText("PF Q", dontSendNotification);
+
+		addAndMakeVisible(peakIntensity);
+		peakIntensity.setSliderStyle(Slider::SliderStyle::LinearVertical);
+		peakIntensity.setRange(0.5, 3);
+		peakIntensity.setValue(1.5, dontSendNotification);
+		peakIntensity.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+		addAndMakeVisible(peakIntensityLabel);
+		peakIntensityLabel.attachToComponent(&peakIntensity, false);
+		peakIntensityLabel.setText("PF Intensity", dontSendNotification);
+
 		addAndMakeVisible(despacito);
 		despacito.setText("Waiting for file input...", dontSendNotification);
 		
@@ -135,7 +162,7 @@ public:
 	{
 		preformFFTOnAudio();
 	}
-    //==============================================================================
+
     void paint (Graphics& g) override
     {
         g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
@@ -145,17 +172,29 @@ public:
     {
 		Rectangle<int> window = getLocalBounds();
 
-		fftComp.setBounds(window.removeFromRight(getWidth() * 2 / 3));
+		fftComp.setBounds(window.removeFromRight(getWidth() * 0.6));
 		int textBoxOffset = 10;
 
 		Rectangle<int> sliderArea = window.removeFromRight(window.getWidth() / 2);
-		Rectangle<int> lpArea = sliderArea.removeFromTop(sliderArea.getHeight() / 2);
+		Rectangle<int> lpArea = sliderArea.removeFromTop(sliderArea.getHeight() / 3);
 		lpCutoff.setBounds(lpArea.removeFromLeft(lpArea.getWidth() / 2).reduced(5));
 		lpCutoffLabel.setTopLeftPosition(lpCutoff.getPosition().getX(), 
 			lpCutoff.getPosition().getY() - textBoxOffset);
 		lpQ.setBounds(lpArea.reduced(5));
 		lpQLabel.setTopLeftPosition(lpQ.getPosition().getX(),
 			lpQ.getPosition().getY() - textBoxOffset);
+
+		Rectangle<int> pfArea = sliderArea.removeFromTop(sliderArea.getHeight() / 2);
+		peakFreq.setBounds(pfArea.removeFromLeft(pfArea.getWidth() / 3).reduced(5));
+		peakFreqLabel.setTopLeftPosition(peakFreq.getPosition().getX(),
+			peakFreq.getPosition().getY() - textBoxOffset);
+		peakIntensity.setBounds(pfArea.removeFromLeft(pfArea.getWidth() / 2).reduced(5));
+		peakIntensityLabel.setTopLeftPosition(peakIntensity.getPosition().getX(),
+			peakIntensity.getPosition().getY() - textBoxOffset);
+		peakQ.setBounds(pfArea.reduced(5));
+		peakQLabel.setTopLeftPosition(peakQ.getPosition().getX(),
+			peakQ.getPosition().getY() - textBoxOffset);
+
 		hpCutoff.setBounds(sliderArea.removeFromLeft(sliderArea.getWidth() / 2).reduced(5));
 		hpCutoffLabel.setTopLeftPosition(hpCutoff.getPosition().getX(),
 			hpCutoff.getPosition().getY() - textBoxOffset);
@@ -170,10 +209,9 @@ public:
 
 	void preformFFTOnAudio()
 	{
-		//filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, lpCutoff.getValue(), lpQ.getValue()));
 		lpFilter.setCoefficients(IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, lpCutoff.getValue(), lpQ.getValue())));
 		hpFilter.setCoefficients(IIRCoefficients(IIRCoefficients::makeHighPass(__FILESAMPLERATE, hpCutoff.getValue(), hpQ.getValue())));
-		peakFilter.setCoefficients(IIRCoefficients::makePeakFilter(__FILESAMPLERATE, 590, 1.5, 1.5));
+		peakFilter.setCoefficients(IIRCoefficients::makePeakFilter(__FILESAMPLERATE, peakFreq.getValue(), peakQ.getValue(), peakIntensity.getValue()));
 
 		lpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		hpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
@@ -220,8 +258,8 @@ private:
 	IIRFilter peakFilter;
 	IIRCoefficients filterCoefficients;
 
-	Label despacito, hpCutoffLabel, lpCutoffLabel, hpQLabel, lpQLabel;
-	Slider hpCutoff, lpCutoff, hpQ, lpQ;
+	Label despacito, hpCutoffLabel, lpCutoffLabel, hpQLabel, lpQLabel, peakFreqLabel, peakQLabel, peakIntensityLabel;
+	Slider hpCutoff, lpCutoff, hpQ, lpQ, peakFreq, peakQ, peakIntensity;
 
 	FFTComponent fftComp;
 

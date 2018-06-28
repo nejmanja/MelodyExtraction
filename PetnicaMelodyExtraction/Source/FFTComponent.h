@@ -59,6 +59,16 @@ public:
 		textLog.setColour(TextEditor::outlineColourId, Colour(0x1c000000));
 		textLog.setColour(TextEditor::shadowColourId, Colour(0x16000000));
 
+		addAndMakeVisible(deletionThresSlider);
+		deletionThresSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+		deletionThresSlider.setRange(0.0, 1.0);
+		deletionThresSlider.setValue(0.3);
+
+		addAndMakeVisible(fftScanThresSlider);
+		fftScanThresSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+		fftScanThresSlider.setRange(0.0, 1.0);
+		fftScanThresSlider.setValue(0.5);
+
 		addAndMakeVisible(midiComp);
 		midiComp.setUpTrack(4, 4, 500000);
 	}
@@ -79,9 +89,10 @@ public:
 
 	void resized() override
 	{
-		Rectangle<int> window = getLocalBounds();
-		textLog.setBounds(window.removeFromLeft(getWidth() / 2));
-
+		Rectangle<int> window(getWidth() / 2, getHeight());
+		textLog.setBounds(window.removeFromTop(getHeight() * 0.8));
+		deletionThresSlider.setBounds(window.removeFromTop(window.getHeight() / 2));
+		fftScanThresSlider.setBounds(window);
 	}
 
 	void pushNextSampleIntoFifo(float sample, double smpRate) noexcept
@@ -128,7 +139,7 @@ public:
 		}
 
 		int mostPresentNote = findMaximum(histogramArr, 128);
-		float deletionThres = mostPresentNote * 0.3f; //lol
+		float deletionThres = mostPresentNote * deletionThresSlider.getValue(); //around 0.3 seems to give the best results
 
 		for (int i = 0; i < 128; ++i)
 		{
@@ -154,7 +165,7 @@ public:
 				mostPresentIndex = i;
 		}
 
-		for (int i = 0; i < mostPresentIndex - 12; ++i) //oktava i jos malo preko
+		for (int i = 0; i < mostPresentIndex - 7; ++i) //oktava i jos malo preko
 		{
 			for (int j = 1; j < midiNotes.size() - 1; ++j)
 			{
@@ -248,7 +259,7 @@ public:
 	{
 		float maxFreq = findMaximum(fftData, fftSize / 2);
 		float minFreq = findMinimum(fftData, fftSize / 2);
-		float thresFactor = 0.5f; //0.5f seems to give the best results
+		float thresFactor = fftScanThresSlider.getValue(); //0.5f seems to give the best results
 		float threshold = (maxFreq - minFreq) * thresFactor;
 
 		
@@ -337,7 +348,7 @@ private:
 	Image spectrogramImage;
 	TextEditor textLog;
 
-	
+	Slider deletionThresSlider, fftScanThresSlider;
 
 	float fifo[fftSize];
 	float fftData[2 * fftSize];
