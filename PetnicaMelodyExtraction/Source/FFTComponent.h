@@ -5,6 +5,7 @@
 
 #define _F0 440 //A4=440Hz
 #define _A 1.0594630943592952645618252949463 //2^(1/12) 
+
 /*
 Fn = F0*a^n (n = num of semitones from F0)
 from here:
@@ -120,7 +121,7 @@ public:
 	void findMelodyRange()
 	{
 		Array<int> midiNotes;
-		Array<int> midiNoteDurations;
+		//Array<int> midiNoteDurations;
 		Array<int> midiNoteStarts;
 		/*
 		Find where the average melody lies, then setup threshold
@@ -144,6 +145,48 @@ public:
 			}
 		}
 
+		int mostPresentNote = findMaximum(histogramArr, 128);
+		float deletionThres = mostPresentNote * 0.4f; //lol
+
+		for (int i = 0; i < 128; ++i)
+		{
+			if ((histogramArr[i] > 0) && (histogramArr[i] < deletionThres))
+			{
+				for (int j = 1; j < midiNotes.size() - 1; ++j)
+				{
+					if (midiNotes[j] == i)
+					{
+						midiNotes.remove(j);
+						midiNoteStarts.remove(j);
+					}
+				}
+			}
+			textLog.moveCaretToEnd();
+			textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
+		}
+
+		int mostPresentIndex;
+		for (int i = 0; i < 128; ++i)
+		{
+			if (histogramArr[i] == mostPresentNote)
+				mostPresentIndex = i;
+		}
+
+		for (int i = 0; i < mostPresentIndex - 14; ++i) //oktava i jos malo preko
+		{
+			for (int j = 1; j < midiNotes.size() - 1; ++j)
+			{
+				if (midiNotes[j] == i)
+				{
+					midiNotes.remove(j);
+					midiNoteStarts.remove(j);
+				}
+			}
+		}
+
+		textLog.moveCaretToEnd();
+		textLog.insertTextAtCaret("Most present note: " + (String)mostPresentNote);
+
 		int prevNoteBeginning = 0;
 		for (int i = 0; i < midiNotes.size() - 1; ++i)
 		{
@@ -152,14 +195,7 @@ public:
 		midiComp.addNoteToSequence(midiNotes[midiNotes.size() - 1], midiNoteStarts[midiNotes.size() - 1], songContour.size()*fftSize * 3 - midiNoteStarts[midiNotes.size() - 1]);
 		midiComp.finishTrack(songContour.size()*fftSize*3);
 		
-		int mostPresentNote = findMaximum(histogramArr, 128);
-		float deletionThres = mostPresentNote * 0.68f; //lol
-
-		for (int i = 0; i < 128; ++i)
-		{
-			textLog.moveCaretToEnd();
-			textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
-		}
+		
 	}
 
 	String findNoteFromDistance(int distance)
