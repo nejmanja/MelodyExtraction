@@ -94,25 +94,8 @@ public:
 			forwardFFT.performFrequencyOnlyForwardTransform(fftData);
 
 			pushContourIntoArray(smpRate);
-			/*
-			int roundedDistance = roundToInt(log(songContour.getLast().getFreq() / _F0) / log(_A));
 
-			if (findNoteFromDistance(roundedDistance) != prevNote)
-			{
-				textLog.moveCaretToEnd();
-				textLog.insertTextAtCaret("\nDist in semitones: " + (String)roundedDistance
-					+ " Note: " + findNoteFromDistance(roundedDistance));
-				prevNote = findNoteFromDistance(roundedDistance);
-
-				textLog.moveCaretToEnd();
-				textLog.insertTextAtCaret("\n MaxFreq:" + (String)songContour.getLast().getFreq());
-
-				prevNoteDistance = roundedDistance;
-				midiComp.addNoteToSequence(prevNoteDistance + 69 , prevNoteBeginning, songContour.size()*fftSize * 3 - prevNoteBeginning);
-				prevNoteBeginning = songContour.size()*fftSize*3;
-			}
-			
-			*/
+			drawNextLineOfSpectrogram();
 			fifoIndex = 0;
 		}
 		fifo[fifoIndex++] = sample;
@@ -121,7 +104,6 @@ public:
 	void findMelodyRange()
 	{
 		Array<int> midiNotes;
-		//Array<int> midiNoteDurations;
 		Array<int> midiNoteStarts;
 		/*
 		Find where the average melody lies, then setup threshold
@@ -146,7 +128,7 @@ public:
 		}
 
 		int mostPresentNote = findMaximum(histogramArr, 128);
-		float deletionThres = mostPresentNote * 0.4f; //lol
+		float deletionThres = mostPresentNote * 0.3f; //lol
 
 		for (int i = 0; i < 128; ++i)
 		{
@@ -172,7 +154,7 @@ public:
 				mostPresentIndex = i;
 		}
 
-		for (int i = 0; i < mostPresentIndex - 14; ++i) //oktava i jos malo preko
+		for (int i = 0; i < mostPresentIndex - 12; ++i) //oktava i jos malo preko
 		{
 			for (int j = 1; j < midiNotes.size() - 1; ++j)
 			{
@@ -328,18 +310,17 @@ public:
 
 		spectrogramImage.moveImageSection(0, 0, 1, 0, rightHandEdge, imageHeight);
 
-		float datablock[2 * fftSize];
-		auto maxLevel = FloatVectorOperations::findMinAndMax(datablock, fftSize / 2);
+		auto maxLevel = FloatVectorOperations::findMinAndMax(fftData, fftSize / 2);
 
 		for (auto y = 1; y < imageHeight; ++y)
 		{
-			auto skewedProportionY = 1.0f - std::exp(std::log(y / (float)imageHeight) * 0.2f);
+			auto skewedProportionY = 1.0f - std::exp(std::log(y / (float)imageHeight) * 0.05f);
 			auto fftDataIndex = jlimit(0, fftSize / 2, (int)(skewedProportionY * fftSize / 2));
-			auto level = jmap(datablock[fftDataIndex], 0.0f, jmax(maxLevel.getEnd(), 1e-5f), 0.0f, 1.0f);
+			auto level = jmap(fftData[fftDataIndex], 0.0f, jmax(maxLevel.getEnd(), 1e-5f), 0.0f, 1.0f);
 
 			spectrogramImage.setPixelAt(rightHandEdge, y, Colour::fromHSV(level, 1.0f, level, 1.0f));
 		}
-		
+		repaint();
 	}
 
 	enum

@@ -23,9 +23,10 @@ public:
 		getBlockButton.addListener(this);
 		getBlockButton.setEnabled(false);
 
+
 		addAndMakeVisible(lpCutoff);
 		lpCutoff.setSliderStyle(Slider::SliderStyle::LinearVertical);
-		lpCutoff.setRange(0.0, 500.0);
+		lpCutoff.setRange(0.0, 900.0);
 		lpCutoff.setValue(225, dontSendNotification);
 		lpCutoff.setSkewFactorFromMidPoint(275.0);
 		lpCutoff.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
@@ -77,8 +78,6 @@ public:
     ~MainComponent()
     {
 		openButton.removeListener(this);
-		playButton.removeListener(this);
-		stopButton.removeListener(this);
 
         shutdownAudio();
     }
@@ -174,7 +173,7 @@ public:
 		//filterCoefficients = IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, lpCutoff.getValue(), lpQ.getValue()));
 		lpFilter.setCoefficients(IIRCoefficients(IIRCoefficients::makeLowPass(__FILESAMPLERATE, lpCutoff.getValue(), lpQ.getValue())));
 		hpFilter.setCoefficients(IIRCoefficients(IIRCoefficients::makeHighPass(__FILESAMPLERATE, hpCutoff.getValue(), hpQ.getValue())));
-		peakFilter.setCoefficients(IIRCoefficients::makePeakFilter(__FILESAMPLERATE, 520, 1.5, 1.5));
+		peakFilter.setCoefficients(IIRCoefficients::makePeakFilter(__FILESAMPLERATE, 590, 1.5, 1.5));
 
 		lpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
 		hpFilter.processSamples(fileBuffer.getWritePointer(0), fileBuffer.getNumSamples());
@@ -183,24 +182,34 @@ public:
 		{
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t), __FILESAMPLERATE);
 		}
-
+		Time currentTime;
 		fftComp.findMelodyRange();
-		//fftComp.midiComp.finishTrack(fftComp.songContour.size() * fftComp.fftSize * 3);
-		fftComp.midiComp.writeToFile("C:\\Users\\Milanovic\\Music\\output.mid");
+
+		String lpLog = (String)(lpCutoff.getValue());
+		lpLog.replaceCharacter(lpLog[lpLog.lastIndexOfChar('.')], '-');
+		lpLog += ("_LPQ" + (String)lpQ.getValue());
+		lpLog.replaceCharacter(lpLog[lpLog.lastIndexOfChar('.')], '-');
+
+		String hpLog = (String)(hpCutoff.getValue());
+		hpLog.replaceCharacter(hpLog[hpLog.lastIndexOfChar('.')], '-');
+		hpLog += ("_HPQ" + (String)hpQ.getValue());
+		hpLog.replaceCharacter(hpLog[hpLog.lastIndexOfChar('.')], '-');
+
+		fftComp.midiComp.writeToFile("C:\\Users\\Milanovic\\Music\\MExOutput\\" + (String)(currentTime.getMillisecondCounter() / 1000) + 
+			"_LP" +  lpLog + "_HP" + hpLog + ".mid");
 
 		despacito.setText(despacito.getText() + "\nSuccessfully exported MIDI file with filters: LP:" + (String)lpCutoff.getValue() + "/" + (String)lpQ.getValue() +
 			" HP:" + (String)hpCutoff.getValue() + "/" + (String)hpQ.getValue() ,dontSendNotification);
 		despacito.setText(despacito.getText() + " \nAmount of samples: " + (String)fileBuffer.getNumSamples(),
 			dontSendNotification);
 		despacito.setText(despacito.getText() + " \n Amount of contours: " + (String)fftComp.songContour.size(), dontSendNotification);
-		//fftComp.drawNextLineOfSpectrogram();
 	}
 
 private:
     //==============================================================================
     // Your private member variables go here...
 	double __FILESAMPLERATE;
-	TextButton openButton, playButton, stopButton, getBlockButton;
+	TextButton openButton, getBlockButton;
 
 	AudioFormatManager formatManager;
 	std::unique_ptr<AudioFormatReaderSource> readerSource;
