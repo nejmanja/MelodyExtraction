@@ -177,16 +177,16 @@ public:
 			}
 		}
 
-		//octave error fixing
-		for (int i = 1; i < midiNotes.size() - 1; ++i)
+		//octave error fixing ????????????????
+		for (int i = 127; i > mostPresentIndex + 13; --i)
 		{
-			if (midiNotes[i] == (midiNotes[i - 1] + 12) || midiNotes[i] == (midiNotes[i + 1] + 12)) //if it's an octave higher than the prev or next
+			for (int j = 1; j < midiNotes.size() - 1; ++j)
 			{
-				midiNotes[i] -= 12;
-			}
-			else if (midiNotes[i] == (midiNotes[i - 1] - 12) || midiNotes[i] == (midiNotes[i + 1] - 12)) //same but for octave lower
-			{
-				midiNotes[i] += 12;
+				if (midiNotes[j] == i)
+				{
+					midiNotes.remove(j);
+					midiNoteStarts.remove(j);
+				}
 			}
 		}
 

@@ -26,9 +26,9 @@ public:
 
 		addAndMakeVisible(lpCutoff);
 		lpCutoff.setSliderStyle(Slider::SliderStyle::LinearVertical);
-		lpCutoff.setRange(0.0, 900.0);
-		lpCutoff.setValue(225, dontSendNotification);
-		lpCutoff.setSkewFactorFromMidPoint(275.0);
+		lpCutoff.setRange(1500.0, 10000.0);
+		lpCutoff.setValue(4500.0, dontSendNotification);
+		lpCutoff.setSkewFactorFromMidPoint(5000.0);
 		lpCutoff.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 		addAndMakeVisible(lpCutoffLabel);
 		lpCutoffLabel.attachToComponent(&lpCutoff, false);
@@ -36,9 +36,9 @@ public:
 
 		addAndMakeVisible(hpCutoff);
 		hpCutoff.setSliderStyle(Slider::SliderStyle::LinearVertical);
-		hpCutoff.setRange(1500.0, 10000.0);
-		hpCutoff.setValue(4500.0, dontSendNotification);
-		hpCutoff.setSkewFactorFromMidPoint(5000.0);
+		hpCutoff.setRange(0.0, 900.0);
+		hpCutoff.setValue(225.0, dontSendNotification);
+		hpCutoff.setSkewFactorFromMidPoint(275.0);
 		hpCutoff.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 		addAndMakeVisible(hpCutoffLabel);
 		hpCutoffLabel.attachToComponent(&hpCutoff, false);
@@ -225,21 +225,14 @@ public:
 		fftComp.findMelodyRange();
 
 		String lpLog = (String)(lpCutoff.getValue());
-		//lpLog.replaceCharacter(lpLog[lpLog.lastIndexOfChar('.')], '-');
 		lpLog += ("_LPQ" + (String)lpQ.getValue());
-		//lpLog.replaceCharacter(lpLog[lpLog.lastIndexOfChar('.')], '-');
 
 		String hpLog = (String)(hpCutoff.getValue());
-		//hpLog.replaceCharacter(hpLog[hpLog.lastIndexOfChar('.')], '-');
 		hpLog += ("_HPQ" + (String)hpQ.getValue());
-		//hpLog.replaceCharacter(hpLog[hpLog.lastIndexOfChar('.')], '-');
 
 		String pfLog = (String)(peakFreq.getValue());
-		//pfLog.replaceCharacter(pfLog[pfLog.lastIndexOfChar('.')], '-');
 		pfLog += ("_PFQ" + (String)peakQ.getValue());
-		//pfLog.replaceCharacter(pfLog[pfLog.lastIndexOfChar('.')], '-');
 		pfLog += ("_PFI" + (String)peakIntensity.getValue());
-		//pfLog.replaceCharacter(pfLog[pfLog.lastIndexOfChar('.')], '-');
 
 		String fileName = "C:\\Users\\Milanovic\\Music\\MExOutput\\" + (String)(currentTime.getMillisecondCounter() / 1000) + 
 			"_LP" + lpLog + "_HP" + hpLog + "_PF" + pfLog + ".mid";
