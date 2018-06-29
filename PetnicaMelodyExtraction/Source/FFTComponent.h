@@ -178,7 +178,7 @@ public:
 		}
 
 		//octave error fixing ????????????????
-		for (int i = 127; i > mostPresentIndex + 13; --i)
+		for (int i = 127; i > mostPresentIndex + 9; --i)
 		{
 			for (int j = 1; j < midiNotes.size() - 1; ++j)
 			{
