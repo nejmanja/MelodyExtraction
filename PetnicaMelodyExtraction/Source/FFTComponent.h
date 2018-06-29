@@ -177,9 +177,23 @@ public:
 			}
 		}
 
+		//octave error fixing
+		for (int i = 1; i < midiNotes.size() - 1; ++i)
+		{
+			if (midiNotes[i] == (midiNotes[i - 1] + 12) || midiNotes[i] == (midiNotes[i + 1] + 12)) //if it's an octave higher than the prev or next
+			{
+				midiNotes[i] -= 12;
+			}
+			else if (midiNotes[i] == (midiNotes[i - 1] - 12) || midiNotes[i] == (midiNotes[i + 1] - 12)) //same but for octave lower
+			{
+				midiNotes[i] += 12;
+			}
+		}
+
 		textLog.moveCaretToEnd();
 		textLog.insertTextAtCaret("Most present note: " + (String)mostPresentNote);
 
+		//Writing the notes to file
 		int prevNoteBeginning = 0;
 		for (int i = 0; i < midiNotes.size() - 1; ++i)
 		{
@@ -343,12 +357,14 @@ public:
 	Array<PitchContour> songContour;
 	MidiOutputComponent midiComp;
 
+	Slider deletionThresSlider, fftScanThresSlider;
+
 private:
 	dsp::FFT forwardFFT;
 	Image spectrogramImage;
 	TextEditor textLog;
 
-	Slider deletionThresSlider, fftScanThresSlider;
+	
 
 	float fifo[fftSize];
 	float fftData[2 * fftSize];
