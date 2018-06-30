@@ -141,9 +141,12 @@ public:
 
 	void processWindow(double smpRate)
 	{
-		for (int i = 0; i < _FFTWINDOWSIZE; ++i)//for each block
+		Array<int>mostPresentFreqIndexes;
+
+		for (int i = 0; i < _FFTWINDOWSIZE; ++i)//for each block in window
 		{
 			//find peak for each block and push them all into an array or something
+
 			float maxFreq = findMaximum(fftWindow[i], fftSize / 2);
 			float minFreq = findMinimum(fftWindow[i], fftSize / 2);
 			float thresFactor = fftScanThresSlider.getValue(); //0.5f seems to give the best results
@@ -185,9 +188,11 @@ public:
 						freq = baseFreq * FIndex;
 					}
 				}
+
 			}
-			PitchContour newContour(mostPresentFreq, smpRate, fftSize);
+			//PitchContour newContour(mostPresentFreq, smpRate, fftSize);
 			//songContour.add(newContour);
+			mostPresentFreqIndexes.add(mostPresentFreq);
 		}
 	}
 
