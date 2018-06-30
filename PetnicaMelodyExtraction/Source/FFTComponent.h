@@ -118,17 +118,10 @@ public:
 			else
 			{
 				processWindow(smpRate);
-				//shift the matrix left one time
-				for (int y = 0; y < fftSize / 2; ++y)
+				windowIndex = 0;
+				for (int i = 0; i < fftSize / 2; ++i)
 				{
-					for (int x = 1; x < _FFTWINDOWSIZE; ++x)
-					{
-						fftWindow[x - 1][y] = fftWindow[x][y]; //this should probably work
-					}
-				}
-				for (int y = 0; y < fftSize / 2; ++y)
-				{
-					fftWindow[_FFTWINDOWSIZE - 1][y] = fftData[y];
+					fftWindow[windowIndex][i] = fftData[i];
 				}
 			}
 			
@@ -190,10 +183,16 @@ public:
 				}
 
 			}
-			//PitchContour newContour(mostPresentFreq, smpRate, fftSize);
-			//songContour.add(newContour);
+			
 			mostPresentFreqIndexes.add(mostPresentFreq);
 		}
+		int freqHistogramArr[fftSize / 2];
+		for (int i = 0; i < mostPresentFreqIndexes.size(); ++i)
+		{
+			freqHistogramArr[mostPresentFreqIndexes[i]]++;
+		}
+		PitchContour newContour(findMaximum(freqHistogramArr, fftSize / 2), smpRate, fftSize);
+		songContour.add(newContour);
 	}
 
 	void findMelodyRange()
