@@ -105,7 +105,7 @@ public:
 
 			forwardFFT.performFrequencyOnlyForwardTransform(fftData);
 
-			pushContourIntoArray(smpRate);
+			//pushContourIntoArray();
 
 			if (windowIndex < _FFTWINDOWSIZE)
 			{
@@ -117,7 +117,7 @@ public:
 			}
 			else
 			{
-				processWindow();
+				processWindow(smpRate);
 				//shift the matrix left one time
 				for (int y = 0; y < fftSize / 2; ++y)
 				{
@@ -139,11 +139,55 @@ public:
 		fifo[fifoIndex++] = sample;
 	}
 
-	void processWindow()
+	void processWindow(double smpRate)
 	{
 		for (int i = 0; i < _FFTWINDOWSIZE; ++i)//for each block
 		{
 			//find peak for each block and push them all into an array or something
+			float maxFreq = findMaximum(fftWindow[i], fftSize / 2);
+			float minFreq = findMinimum(fftWindow[i], fftSize / 2);
+			float thresFactor = fftScanThresSlider.getValue(); //0.5f seems to give the best results
+			float threshold = (maxFreq - minFreq) * thresFactor;
+
+			//for each freq over the tresh, find all present notable harmonics, take one with largest sum
+
+			int mostPresentFreq = 0; //index of most present frequency
+			float largestSum = 0;
+
+			for (int i = 1; i < fftSize / 2; ++i)
+			{
+				if (fftData[i] >= threshold) //if it's present enough
+				{
+					float sum = fftData[i];
+
+
+					sum += fftData[i * 3 / 2];
+
+					int x = 2;
+					int FIndex = x*i;
+					float baseFreq = i * smpRate / fftSize;
+					float freq = 2 * baseFreq;
+					while (freq < 10000) //i guess
+					{
+						if (fftData[FIndex] >= threshold)
+						{
+							sum += fftData[FIndex];
+						}
+
+						if (sum >= largestSum)
+						{
+							largestSum = sum; //this is the most present
+							mostPresentFreq = i; //at this index
+						}
+
+						x++;
+						FIndex = x * i;
+						freq = baseFreq * FIndex;
+					}
+				}
+			}
+			PitchContour newContour(mostPresentFreq, smpRate, fftSize);
+			//songContour.add(newContour);
 		}
 	}
 
@@ -305,51 +349,7 @@ public:
 
 	void pushContourIntoArray(double smpRate)
 	{
-		float maxFreq = findMaximum(fftData, fftSize / 2);
-		float minFreq = findMinimum(fftData, fftSize / 2);
-		float thresFactor = fftScanThresSlider.getValue(); //0.5f seems to give the best results
-		float threshold = (maxFreq - minFreq) * thresFactor;
-
 		
-		//for each freq over the tresh, find all present notable harmonics, take one with largest sum
-		
-		int mostPresentFreq = 0;
-		float largestSum = 0;
-
-		for (int i = 1; i < fftSize / 2; ++i)
-		{
-			if (fftData[i] >= threshold) //if it's present enough
-			{
-				float sum = fftData[i];
-
-				
-				sum += fftData[i * 3 / 2];
-
-				int x = 2;
-				int FIndex = x*i;
-				float baseFreq = i * smpRate / fftSize;
-				float freq = 2 * baseFreq;
-				while (freq < 10000) //i guess
-				{
-					if (fftData[FIndex] >= threshold)
-					{
-						sum += fftData[FIndex];
-					}
-					
-					if (sum >= largestSum)
-					{
-						largestSum = sum; //this is the most present
-						mostPresentFreq = i; //at this index
-					}
-
-					x++;
-					FIndex = x * i;
-					freq = baseFreq * FIndex;
-				}
-			}
-		}
-		PitchContour newContour(mostPresentFreq, smpRate, fftSize);
-		songContour.add(newContour);
 	}
 
 	void timerCallback() override
