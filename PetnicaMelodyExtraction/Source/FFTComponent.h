@@ -123,8 +123,12 @@ public:
 				{
 					for (int x = 1; x < _FFTWINDOWSIZE; ++x)
 					{
-						fftWindow[x - 1][y] = fftWindow[x][y];
+						fftWindow[x - 1][y] = fftWindow[x][y]; //this should probably work
 					}
+				}
+				for (int y = 0; y < fftSize / 2; ++y)
+				{
+					fftWindow[_FFTWINDOWSIZE - 1][y] = fftData[y];
 				}
 			}
 			
@@ -137,9 +141,9 @@ public:
 
 	void processWindow()
 	{
-		for (int i = 0; i < fftWindow.size(); ++i)//for each block
+		for (int i = 0; i < _FFTWINDOWSIZE; ++i)//for each block
 		{
-			
+			//find peak for each block and push them all into an array or something
 		}
 	}
 
