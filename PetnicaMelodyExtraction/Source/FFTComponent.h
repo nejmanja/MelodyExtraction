@@ -191,7 +191,17 @@ public:
 		{
 			freqHistogramArr[mostPresentFreqIndexes[i]]++;
 		}
-		PitchContour newContour(findMaximum(freqHistogramArr, fftSize / 2), smpRate, fftSize);
+		int maxFreq = findMaximum(freqHistogramArr, fftSize / 2); //find Index of freq now
+		int maxFreqIndex;
+		for (int i = 0; i < fftSize / 2; ++i)
+		{
+			if (freqHistogramArr[i] == maxFreq)
+			{
+				maxFreqIndex = i;
+				break;
+			}
+		}
+		PitchContour newContour(maxFreqIndex, smpRate, fftSize);
 		songContour.add(newContour);
 	}
 
@@ -406,7 +416,7 @@ private:
 	create an fft Window, essentially a fifo structure with a bunch of fftBlocks
 	*/
 	float fftWindow[_FFTWINDOWSIZE][fftSize / 2];
-	int windowIndex; //used when filling for the first time
+	int windowIndex = 0; //used when filling for the first time
 
 	float fifo[fftSize];
 	float fftData[2 * fftSize];
