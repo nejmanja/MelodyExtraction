@@ -154,8 +154,8 @@ public:
 					}
 				}
 			}
-			textLog.moveCaretToEnd();
-			textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
+			//textLog.moveCaretToEnd();
+			//textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
 		}
 
 		int mostPresentIndex;
@@ -177,6 +177,24 @@ public:
 			}
 		}
 
+		for (int i = 1; i < midiNotes.size() - 1; ++i)
+		{
+			if (midiNotes[i] == (midiNotes[i + 1] + 12))
+			{
+				//textLog.moveCaretToEnd();
+				//textLog.insertTextAtCaret((String)midiNotes[i] + " corrected to " + (String)midiNotes[i + 1] + "\n");
+				midiNotes.setUnchecked(i, midiNotes[i + 1]);
+				
+			}
+			else if (midiNotes[i] == (midiNotes[i - 1] + 12))
+			{
+				//textLog.moveCaretToEnd();
+				//textLog.insertTextAtCaret((String)midiNotes[i] + " corrected to " + (String)midiNotes[i - 1] + "\n");
+				midiNotes.setUnchecked(i, midiNotes[i - 1]);
+			}
+		}
+
+		/*
 		//octave error fixing ????????????????
 		for (int i = 127; i > mostPresentIndex + 9; --i)
 		{
@@ -189,7 +207,7 @@ public:
 				}
 			}
 		}
-
+		*/
 		textLog.moveCaretToEnd();
 		textLog.insertTextAtCaret("Most present note: " + (String)mostPresentNote);
 
