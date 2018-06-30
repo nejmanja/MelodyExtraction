@@ -5,6 +5,7 @@
 
 #define _F0 440 //A4=440Hz
 #define _A 1.0594630943592952645618252949463 //2^(1/12) 
+#define _FFTWINDOWSIZE 16
 
 /*
 Fn = F0*a^n (n = num of semitones from F0)
@@ -106,10 +107,40 @@ public:
 
 			pushContourIntoArray(smpRate);
 
+			if (windowIndex < _FFTWINDOWSIZE)
+			{
+				for (int i = 0; i < fftSize / 2; ++i)
+				{
+					fftWindow[windowIndex][i] = fftData[i];
+				}
+				windowIndex++;
+			}
+			else
+			{
+				processWindow();
+				//shift the matrix left one time
+				for (int y = 0; y < fftSize / 2; ++y)
+				{
+					for (int x = 1; x < _FFTWINDOWSIZE; ++x)
+					{
+						fftWindow[x - 1][y] = fftWindow[x][y];
+					}
+				}
+			}
+			
+
 			drawNextLineOfSpectrogram();
 			fifoIndex = 0;
 		}
 		fifo[fifoIndex++] = sample;
+	}
+
+	void processWindow()
+	{
+		for (int i = 0; i < fftWindow.size(); ++i)//for each block
+		{
+			
+		}
 	}
 
 	void findMelodyRange()
@@ -181,33 +212,14 @@ public:
 		{
 			if (midiNotes[i] == (midiNotes[i + 1] + 12))
 			{
-				//textLog.moveCaretToEnd();
-				//textLog.insertTextAtCaret((String)midiNotes[i] + " corrected to " + (String)midiNotes[i + 1] + "\n");
 				midiNotes.setUnchecked(i, midiNotes[i + 1]);
 				
 			}
 			else if (midiNotes[i] == (midiNotes[i - 1] + 12))
 			{
-				//textLog.moveCaretToEnd();
-				//textLog.insertTextAtCaret((String)midiNotes[i] + " corrected to " + (String)midiNotes[i - 1] + "\n");
 				midiNotes.setUnchecked(i, midiNotes[i - 1]);
 			}
 		}
-
-		/*
-		//octave error fixing ????????????????
-		for (int i = 127; i > mostPresentIndex + 9; --i)
-		{
-			for (int j = 1; j < midiNotes.size() - 1; ++j)
-			{
-				if (midiNotes[j] == i)
-				{
-					midiNotes.remove(j);
-					midiNoteStarts.remove(j);
-				}
-			}
-		}
-		*/
 		textLog.moveCaretToEnd();
 		textLog.insertTextAtCaret("Most present note: " + (String)mostPresentNote);
 
@@ -382,7 +394,11 @@ private:
 	Image spectrogramImage;
 	TextEditor textLog;
 
-	
+	/*
+	create an fft Window, essentially a fifo structure with a bunch of fftBlocks
+	*/
+	float fftWindow[_FFTWINDOWSIZE][fftSize / 2];
+	int windowIndex; //used when filling for the first time
 
 	float fifo[fftSize];
 	float fftData[2 * fftSize];
