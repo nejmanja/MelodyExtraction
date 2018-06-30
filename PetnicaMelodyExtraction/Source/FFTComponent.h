@@ -181,11 +181,11 @@ public:
 						freq = baseFreq * FIndex;
 					}
 				}
-
 			}
 			
 			mostPresentFreqIndexes.add(mostPresentFreq);
 		}
+
 		int freqHistogramArr[fftSize / 2];
 		for (int i = 0; i < mostPresentFreqIndexes.size(); ++i)
 		{
