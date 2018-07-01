@@ -222,7 +222,7 @@ public:
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t), __FILESAMPLERATE);
 		}
 		Time currentTime;
-		fftComp.findMelodyRange();
+		//fftComp.findMelodyRange();
 
 		String lpLog = (String)(lpCutoff.getValue());
 		lpLog += ("_LPQ" + (String)lpQ.getValue());

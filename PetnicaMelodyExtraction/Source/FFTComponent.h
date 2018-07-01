@@ -203,6 +203,8 @@ public:
 		}
 		PitchContour newContour(maxFreqIndex, smpRate, fftSize);
 		songContour.add(newContour);
+		textLog.moveCaretToEnd();
+		textLog.insertTextAtCaret((String)newContour.getMidiNote() + "found \n"); //returns values larger than 128
 	}
 
 	void findMelodyRange()
