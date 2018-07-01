@@ -118,7 +118,7 @@ public:
 			else
 			{
 				processWindow(smpRate);
-				for (int y = 0; y < fftSize / 2; ++y)
+				for (int y = 0; y < fftSize / 2; ++y) //shift matrix leftwards once
 				{
 					for (int x = 1; x < _FFTWINDOWSIZE; ++x)
 					{
@@ -230,13 +230,30 @@ public:
 		{
 			if (songContour[i].getMidiNote() != prevNote)
 			{
-				histogramArr[songContour[i].getMidiNote()]++; //currently passess every block, might try to only place changes
-				prevNote = songContour[i].getMidiNote();
-				midiNotes.add(songContour[i].getMidiNote());
-				midiNoteStarts.add(i * fftSize * 3);
+				if (i != 0)
+				{
+					if (lastIntensities[i - 1] < lastIntensities[i])
+					{
+						histogramArr[songContour[i].getMidiNote()]++; //currently passess every block, might try to only place changes
+						prevNote = songContour[i].getMidiNote();
+						midiNotes.add(songContour[i].getMidiNote());
+						midiNoteStarts.add(i * fftSize * 3);
 
-				textLog.moveCaretToEnd();
-				textLog.insertTextAtCaret((String)songContour[i].getMidiNote() + "\n");
+						textLog.moveCaretToEnd();
+						textLog.insertTextAtCaret((String)songContour[i].getMidiNote() + "\n");
+					}
+					
+				}
+				else
+				{
+					histogramArr[songContour[i].getMidiNote()]++; //currently passess every block, might try to only place changes
+					prevNote = songContour[i].getMidiNote();
+					midiNotes.add(songContour[i].getMidiNote());
+					midiNoteStarts.add(i * fftSize * 3);
+
+					textLog.moveCaretToEnd();
+					textLog.insertTextAtCaret((String)songContour[i].getMidiNote() + "\n");
+				}
 			}
 		}
 
