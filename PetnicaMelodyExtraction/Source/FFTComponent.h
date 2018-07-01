@@ -209,7 +209,8 @@ public:
 		}
 		PitchContour newContour(maxFreqIndex, smpRate, fftSize);
 		songContour.add(newContour);
-
+		//With the most present freq, return the intensity, and then compare the two
+		lastIntensities.add(maxFreq);
 		
 	}
 
@@ -425,6 +426,8 @@ private:
 	*/
 	float fftWindow[_FFTWINDOWSIZE][fftSize / 2];
 	int windowIndex = 0; //used when filling for the first time
+
+	Array<int> lastIntensities;
 
 	float fifo[fftSize];
 	float fftData[2 * fftSize];
