@@ -186,7 +186,7 @@ public:
 			mostPresentFreqIndexes.add(mostPresentFreq);
 		}
 
-		int freqHistogramArr[fftSize / 2];
+		int freqHistogramArr[fftSize / 2] = { 0 };
 		for (int i = 0; i < mostPresentFreqIndexes.size(); ++i)
 		{
 			freqHistogramArr[mostPresentFreqIndexes[i]]++;
@@ -203,8 +203,8 @@ public:
 		}
 		PitchContour newContour(maxFreqIndex, smpRate, fftSize);
 		songContour.add(newContour);
-		textLog.moveCaretToEnd();
-		textLog.insertTextAtCaret((String)newContour.getMidiNote() + "found \n"); //returns values larger than 128
+
+		
 	}
 
 	void findMelodyRange()
@@ -291,10 +291,10 @@ public:
 		int prevNoteBeginning = 0;
 		for (int i = 0; i < midiNotes.size() - 1; ++i)
 		{
-			midiComp.addNoteToSequence(midiNotes[i], midiNoteStarts[i], midiNoteStarts[i+1] - midiNoteStarts[i]);
+			midiComp.addNoteToSequence(midiNotes[i], midiNoteStarts[i] * _FFTWINDOWSIZE, (midiNoteStarts[i+1] - midiNoteStarts[i]) * _FFTWINDOWSIZE);
 		}
-		midiComp.addNoteToSequence(midiNotes[midiNotes.size() - 1], midiNoteStarts[midiNotes.size() - 1], songContour.size()*fftSize * 3 - midiNoteStarts[midiNotes.size() - 1]);
-		midiComp.finishTrack(songContour.size()*fftSize*3);
+		midiComp.addNoteToSequence(midiNotes[midiNotes.size() - 1], midiNoteStarts[midiNotes.size() - 1] * _FFTWINDOWSIZE, (songContour.size()*fftSize * 3 - midiNoteStarts[midiNotes.size() - 1])*_FFTWINDOWSIZE);
+		midiComp.finishTrack(songContour.size()*fftSize*3*_FFTWINDOWSIZE);
 		
 		
 	}

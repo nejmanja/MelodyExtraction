@@ -222,7 +222,7 @@ public:
 			fftComp.pushNextSampleIntoFifo(fileBuffer.getSample(0, t), __FILESAMPLERATE);
 		}
 		Time currentTime;
-		//fftComp.findMelodyRange();
+		fftComp.findMelodyRange();
 
 		String lpLog = (String)(lpCutoff.getValue());
 		lpLog += ("_LPQ" + (String)lpQ.getValue());
@@ -237,6 +237,7 @@ public:
 		String fileName = "C:\\Users\\Milanovic\\Music\\MExOutput\\" + (String)(currentTime.getMillisecondCounter() / 1000) + 
 			"_LP" + lpLog + "_HP" + hpLog + "_PF" + pfLog + ".mid";
 		fftComp.midiComp.writeToFile(fileName);
+
 		despacito.setText(despacito.getText() + "\nSuccessfully exported MIDI file with filters: LP:" + (String)lpCutoff.getValue() + "/" + (String)lpQ.getValue() +
 			" HP:" + (String)hpCutoff.getValue() + "/" + (String)hpQ.getValue() ,dontSendNotification);
 		despacito.setText(despacito.getText() + " \nAmount of samples: " + (String)fileBuffer.getNumSamples(),
@@ -250,6 +251,7 @@ public:
 							+ "HighPass:\n\t Freq: " + (String)hpCutoff.getValue() + " Q: " + (String)hpQ.getValue() + "\n" +
 							+ "PeakFilter:\n\t Freq: " + (String)peakFreq.getValue() + " Q: " + (String)peakQ.getValue() + " Intensity: " + (String)peakIntensity.getValue() + "\n" + 
 							+ "Deletion thres: " + (String)fftComp.deletionThresSlider.getValue() + " FFT Detection thres: " + (String)fftComp.fftScanThresSlider.getValue() + "\n\n");
+		
 	}
 
 private:
