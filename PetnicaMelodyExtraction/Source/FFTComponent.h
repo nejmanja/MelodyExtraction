@@ -5,7 +5,7 @@
 
 #define _F0 440 //A4=440Hz
 #define _A 1.0594630943592952645618252949463 //2^(1/12) 
-#define _FFTWINDOWSIZE 16
+#define _FFTWINDOWSIZE 4
 
 /*
 Fn = F0*a^n (n = num of semitones from F0)
@@ -118,10 +118,16 @@ public:
 			else
 			{
 				processWindow(smpRate);
-				windowIndex = 0;
-				for (int i = 0; i < fftSize / 2; ++i)
+				for (int y = 0; y < fftSize / 2; ++y)
 				{
-					fftWindow[windowIndex][i] = fftData[i];
+					for (int x = 1; x < _FFTWINDOWSIZE; ++x)
+					{
+						fftWindow[x - 1][y] = fftWindow[x][y];
+					}
+				}
+				for (int y = 0; y < fftSize / 2; ++y)
+				{
+					fftWindow[_FFTWINDOWSIZE - 1][y] = fftData[y];
 				}
 			}
 			
@@ -291,10 +297,10 @@ public:
 		int prevNoteBeginning = 0;
 		for (int i = 0; i < midiNotes.size() - 1; ++i)
 		{
-			midiComp.addNoteToSequence(midiNotes[i], midiNoteStarts[i] * _FFTWINDOWSIZE, (midiNoteStarts[i+1] - midiNoteStarts[i]) * _FFTWINDOWSIZE);
+			midiComp.addNoteToSequence(midiNotes[i], midiNoteStarts[i], (midiNoteStarts[i+1] - midiNoteStarts[i]));
 		}
-		midiComp.addNoteToSequence(midiNotes[midiNotes.size() - 1], midiNoteStarts[midiNotes.size() - 1] * _FFTWINDOWSIZE, (songContour.size()*fftSize * 3 - midiNoteStarts[midiNotes.size() - 1])*_FFTWINDOWSIZE);
-		midiComp.finishTrack(songContour.size()*fftSize*3*_FFTWINDOWSIZE);
+		midiComp.addNoteToSequence(midiNotes[midiNotes.size() - 1], midiNoteStarts[midiNotes.size() - 1], (songContour.size()*fftSize * 3 - midiNoteStarts[midiNotes.size() - 1]));
+		midiComp.finishTrack(songContour.size()*fftSize*3);
 		
 		
 	}
