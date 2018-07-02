@@ -311,7 +311,11 @@ public:
 
 		for (int i = 1; i < midiNoteStarts.size(); ++i)
 		{
-
+			if (midiNoteStarts[i] - midiNoteStarts[i - 1] <= i * fftSize * 4) //slightly larger than the minimal chunk
+			{
+				midiNotes.remove(i - 1);
+				midiNoteStarts.remove(i - 1);
+			}
 		}
 
 		textLog.moveCaretToEnd();
