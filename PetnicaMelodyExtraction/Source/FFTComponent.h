@@ -308,6 +308,12 @@ public:
 				midiNotes.setUnchecked(i, midiNotes[i - 1]);
 			}
 		}
+
+		for (int i = 1; i < midiNoteStarts.size(); ++i)
+		{
+
+		}
+
 		textLog.moveCaretToEnd();
 		textLog.insertTextAtCaret("Most present note: " + (String)mostPresentNote);
 
