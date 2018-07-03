@@ -273,8 +273,8 @@ public:
 					}
 				}
 			}
-			//textLog.moveCaretToEnd();
-			//textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
+			textLog.moveCaretToEnd();
+			textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
 		}
 
 		int mostPresentIndex;
@@ -296,6 +296,7 @@ public:
 			}
 		}
 
+<<<<<<< HEAD
 		for (int i = 1; i < midiNotes.size() - 1; ++i)
 		{
 			if (midiNotes[i] == (midiNotes[i + 1] + 12))
@@ -310,6 +311,10 @@ public:
 		}
 
 		for (int i = 1; i < midiNoteStarts.size(); ++i)
+=======
+		//octave error fixing ????????????????
+		for (int i = 127; i > mostPresentIndex + 9; --i)
+>>>>>>> parent of d349253... Implemented a better octave error detection system
 		{
 			if (midiNoteStarts[i] - midiNoteStarts[i - 1] <= i * fftSize * 4) //slightly larger than the minimal chunk
 			{
