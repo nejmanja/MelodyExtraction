@@ -194,20 +194,15 @@ public:
 			}
 		}
 
-		/*
-		//octave error fixing ????????????????
-		for (int i = 127; i > mostPresentIndex + 9; --i)
+		for (int i = 1; i < midiNoteStarts.size(); ++i)
 		{
-		for (int j = 1; j < midiNotes.size() - 1; ++j)
-		{
-		if (midiNotes[j] == i)
-		{
-		midiNotes.remove(j);
-		midiNoteStarts.remove(j);
+			if ((float)(midiNoteStarts[i] - midiNoteStarts[i - 1]) <= fftSize * 3.2f)
+			{
+				midiNotes.remove(i-1);
+				midiNoteStarts.remove(i - 1);
+			}
 		}
-		}
-		}
-		*/
+
 		textLog.moveCaretToEnd();
 		textLog.insertTextAtCaret("Most present note: " + (String)mostPresentNote);
 
