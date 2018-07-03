@@ -5,7 +5,6 @@
 
 #define _F0 440 //A4=440Hz
 #define _A 1.0594630943592952645618252949463 //2^(1/12) 
-#define _FFTWINDOWSIZE 4
 
 /*
 Fn = F0*a^n (n = num of semitones from F0)
@@ -105,113 +104,12 @@ public:
 
 			forwardFFT.performFrequencyOnlyForwardTransform(fftData);
 
-			//pushContourIntoArray();
-
-			if (windowIndex < _FFTWINDOWSIZE)
-			{
-				for (int i = 0; i < fftSize / 2; ++i)
-				{
-					fftWindow[windowIndex][i] = fftData[i];
-				}
-				windowIndex++;
-			}
-			else
-			{
-				processWindow(smpRate);
-				for (int y = 0; y < fftSize / 2; ++y) //shift matrix leftwards once
-				{
-					for (int x = 1; x < _FFTWINDOWSIZE; ++x)
-					{
-						fftWindow[x - 1][y] = fftWindow[x][y];
-					}
-				}
-				for (int y = 0; y < fftSize / 2; ++y)
-				{
-					fftWindow[_FFTWINDOWSIZE - 1][y] = fftData[y];
-				}
-			}
-			
+			pushContourIntoArray(smpRate);
 
 			drawNextLineOfSpectrogram();
 			fifoIndex = 0;
 		}
 		fifo[fifoIndex++] = sample;
-	}
-
-	void processWindow(double smpRate)
-	{
-		Array<int>mostPresentFreqIndexes;
-
-		for (int i = 0; i < _FFTWINDOWSIZE; ++i)//for each block in window
-		{
-			//find peak for each block and push them all into an array or something
-
-			float maxFreq = findMaximum(fftWindow[i], fftSize / 2);
-			float minFreq = findMinimum(fftWindow[i], fftSize / 2);
-			float thresFactor = fftScanThresSlider.getValue(); //0.5f seems to give the best results
-			float threshold = (maxFreq - minFreq) * thresFactor;
-
-			//for each freq over the tresh, find all present notable harmonics, take one with largest sum
-
-			int mostPresentFreq = 0; //index of most present frequency
-			float largestSum = 0;
-
-			for (int i = 1; i < fftSize / 2; ++i)
-			{
-				if (fftData[i] >= threshold) //if it's present enough
-				{
-					float sum = fftData[i];
-
-
-					sum += fftData[i * 3 / 2];
-
-					int x = 2;
-					int FIndex = x*i;
-					float baseFreq = i * smpRate / fftSize;
-					float freq = 2 * baseFreq;
-					while (freq < 10000) //i guess
-					{
-						if (fftData[FIndex] >= threshold)
-						{
-							sum += fftData[FIndex];
-						}
-
-						if (sum >= largestSum)
-						{
-							largestSum = sum; //this is the most present
-							mostPresentFreq = i; //at this index
-						}
-
-						x++;
-						FIndex = x * i;
-						freq = baseFreq * FIndex;
-					}
-				}
-			}
-			
-			mostPresentFreqIndexes.add(mostPresentFreq);
-		}
-
-		int freqHistogramArr[fftSize / 2] = { 0 };
-		for (int i = 0; i < mostPresentFreqIndexes.size(); ++i)
-		{
-			freqHistogramArr[mostPresentFreqIndexes[i]]++;
-		}
-		int maxFreq = findMaximum(freqHistogramArr, fftSize / 2); //find Index of freq now
-		int maxFreqIndex;
-		for (int i = 0; i < fftSize / 2; ++i)
-		{
-			if (freqHistogramArr[i] == maxFreq)
-			{
-				maxFreqIndex = i;
-				break;
-			}
-		}
-		PitchContour newContour(maxFreqIndex, smpRate, fftSize);
-		songContour.add(newContour);
-		//With the most present freq, return the intensity, and then compare the two
-		lastIntensities.add(maxFreq);
-		
 	}
 
 	void findMelodyRange()
@@ -230,30 +128,13 @@ public:
 		{
 			if (songContour[i].getMidiNote() != prevNote)
 			{
-				if (i != 0)
-				{
-					if (lastIntensities[i - 1] < lastIntensities[i])
-					{
-						histogramArr[songContour[i].getMidiNote()]++; //currently passess every block, might try to only place changes
-						prevNote = songContour[i].getMidiNote();
-						midiNotes.add(songContour[i].getMidiNote());
-						midiNoteStarts.add(i * fftSize * 3);
+				histogramArr[songContour[i].getMidiNote()]++; //currently passess every block, might try to only place changes
+				prevNote = songContour[i].getMidiNote();
+				midiNotes.add(songContour[i].getMidiNote());
+				midiNoteStarts.add(i * fftSize * 3);
 
-						textLog.moveCaretToEnd();
-						textLog.insertTextAtCaret((String)songContour[i].getMidiNote() + "\n");
-					}
-					
-				}
-				else
-				{
-					histogramArr[songContour[i].getMidiNote()]++; //currently passess every block, might try to only place changes
-					prevNote = songContour[i].getMidiNote();
-					midiNotes.add(songContour[i].getMidiNote());
-					midiNoteStarts.add(i * fftSize * 3);
-
-					textLog.moveCaretToEnd();
-					textLog.insertTextAtCaret((String)songContour[i].getMidiNote() + "\n");
-				}
+				textLog.moveCaretToEnd();
+				textLog.insertTextAtCaret((String)songContour[i].getMidiNote() + "\n");
 			}
 		}
 
@@ -273,8 +154,8 @@ public:
 					}
 				}
 			}
-			textLog.moveCaretToEnd();
-			textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
+			//textLog.moveCaretToEnd();
+			//textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
 		}
 
 		int mostPresentIndex;
@@ -296,33 +177,37 @@ public:
 			}
 		}
 
-<<<<<<< HEAD
 		for (int i = 1; i < midiNotes.size() - 1; ++i)
 		{
 			if (midiNotes[i] == (midiNotes[i + 1] + 12))
 			{
+				//textLog.moveCaretToEnd();
+				//textLog.insertTextAtCaret((String)midiNotes[i] + " corrected to " + (String)midiNotes[i + 1] + "\n");
 				midiNotes.setUnchecked(i, midiNotes[i + 1]);
-				
+
 			}
 			else if (midiNotes[i] == (midiNotes[i - 1] + 12))
 			{
+				//textLog.moveCaretToEnd();
+				//textLog.insertTextAtCaret((String)midiNotes[i] + " corrected to " + (String)midiNotes[i - 1] + "\n");
 				midiNotes.setUnchecked(i, midiNotes[i - 1]);
 			}
 		}
 
-		for (int i = 1; i < midiNoteStarts.size(); ++i)
-=======
+		/*
 		//octave error fixing ????????????????
 		for (int i = 127; i > mostPresentIndex + 9; --i)
->>>>>>> parent of d349253... Implemented a better octave error detection system
 		{
-			if (midiNoteStarts[i] - midiNoteStarts[i - 1] <= i * fftSize * 4) //slightly larger than the minimal chunk
-			{
-				midiNotes.remove(i - 1);
-				midiNoteStarts.remove(i - 1);
-			}
+		for (int j = 1; j < midiNotes.size() - 1; ++j)
+		{
+		if (midiNotes[j] == i)
+		{
+		midiNotes.remove(j);
+		midiNoteStarts.remove(j);
 		}
-
+		}
+		}
+		*/
 		textLog.moveCaretToEnd();
 		textLog.insertTextAtCaret("Most present note: " + (String)mostPresentNote);
 
@@ -330,12 +215,12 @@ public:
 		int prevNoteBeginning = 0;
 		for (int i = 0; i < midiNotes.size() - 1; ++i)
 		{
-			midiComp.addNoteToSequence(midiNotes[i], midiNoteStarts[i], (midiNoteStarts[i+1] - midiNoteStarts[i]));
+			midiComp.addNoteToSequence(midiNotes[i], midiNoteStarts[i], midiNoteStarts[i + 1] - midiNoteStarts[i]);
 		}
-		midiComp.addNoteToSequence(midiNotes[midiNotes.size() - 1], midiNoteStarts[midiNotes.size() - 1], (songContour.size()*fftSize * 3 - midiNoteStarts[midiNotes.size() - 1]));
-		midiComp.finishTrack(songContour.size()*fftSize*3);
-		
-		
+		midiComp.addNoteToSequence(midiNotes[midiNotes.size() - 1], midiNoteStarts[midiNotes.size() - 1], songContour.size()*fftSize * 3 - midiNoteStarts[midiNotes.size() - 1]);
+		midiComp.finishTrack(songContour.size()*fftSize * 3);
+
+
 	}
 
 	String findNoteFromDistance(int distance)
@@ -404,7 +289,51 @@ public:
 
 	void pushContourIntoArray(double smpRate)
 	{
-		
+		float maxFreq = findMaximum(fftData, fftSize / 2);
+		float minFreq = findMinimum(fftData, fftSize / 2);
+		float thresFactor = fftScanThresSlider.getValue(); //0.5f seems to give the best results
+		float threshold = (maxFreq - minFreq) * thresFactor;
+
+
+		//for each freq over the tresh, find all present notable harmonics, take one with largest sum
+
+		int mostPresentFreq = 0;
+		float largestSum = 0;
+
+		for (int i = 1; i < fftSize / 2; ++i)
+		{
+			if (fftData[i] >= threshold) //if it's present enough
+			{
+				float sum = fftData[i];
+
+
+				sum += fftData[i * 3 / 2];
+
+				int x = 2;
+				int FIndex = x*i;
+				float baseFreq = i * smpRate / fftSize;
+				float freq = 2 * baseFreq;
+				while (freq < 10000) //i guess
+				{
+					if (fftData[FIndex] >= threshold)
+					{
+						sum += fftData[FIndex];
+					}
+
+					if (sum >= largestSum)
+					{
+						largestSum = sum; //this is the most present
+						mostPresentFreq = i; //at this index
+					}
+
+					x++;
+					FIndex = x * i;
+					freq = baseFreq * FIndex;
+				}
+			}
+		}
+		PitchContour newContour(mostPresentFreq, smpRate, fftSize);
+		songContour.add(newContour);
 	}
 
 	void timerCallback() override
@@ -453,13 +382,7 @@ private:
 	Image spectrogramImage;
 	TextEditor textLog;
 
-	/*
-	create an fft Window, essentially a fifo structure with a bunch of fftBlocks
-	*/
-	float fftWindow[_FFTWINDOWSIZE][fftSize / 2];
-	int windowIndex = 0; //used when filling for the first time
 
-	Array<int> lastIntensities;
 
 	float fifo[fftSize];
 	float fftData[2 * fftSize];
@@ -468,5 +391,5 @@ private:
 
 	String prevNote = "X"; int prevNoteDistance = 0; int prevNoteBeginning = 0;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FFTComponent)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FFTComponent)
 };
