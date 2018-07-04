@@ -114,8 +114,6 @@ public:
 
 	void findMelodyRange()
 	{
-		Array<int> midiNotes;
-		Array<int> midiNoteStarts;
 		/*
 		Find where the average melody lies, then setup threshold
 		and remove mistaken notes or switch octaevs when there are
@@ -138,6 +136,7 @@ public:
 			}
 		}
 
+		//Deletion by rarity, might remove thiss
 		int mostPresentNote = findMaximum(histogramArr, 128);
 		float deletionThres = mostPresentNote * deletionThresSlider.getValue(); //around 0.3 seems to give the best results
 
@@ -154,8 +153,6 @@ public:
 					}
 				}
 			}
-			//textLog.moveCaretToEnd();
-			//textLog.insertTextAtCaret((String)i + ": " + (String)histogramArr[i] + "\n");
 		}
 
 		int mostPresentIndex;
@@ -165,7 +162,7 @@ public:
 				mostPresentIndex = i;
 		}
 
-		for (int i = 0; i < mostPresentIndex - 7; ++i) //oktava i jos malo preko
+		for (int i = 0; i < mostPresentIndex - 12; ++i) //oktava i jos malo preko
 		{
 			for (int j = 1; j < midiNotes.size() - 1; ++j)
 			{
@@ -177,31 +174,31 @@ public:
 			}
 		}
 
+		//Octave error correction
 		for (int i = 1; i < midiNotes.size() - 1; ++i)
 		{
 			if (midiNotes[i] == (midiNotes[i + 1] + 12))
 			{
-				//textLog.moveCaretToEnd();
-				//textLog.insertTextAtCaret((String)midiNotes[i] + " corrected to " + (String)midiNotes[i + 1] + "\n");
 				midiNotes.setUnchecked(i, midiNotes[i + 1]);
 
 			}
 			else if (midiNotes[i] == (midiNotes[i - 1] + 12))
 			{
-				//textLog.moveCaretToEnd();
-				//textLog.insertTextAtCaret((String)midiNotes[i] + " corrected to " + (String)midiNotes[i - 1] + "\n");
 				midiNotes.setUnchecked(i, midiNotes[i - 1]);
 			}
 		}
 
+		//Very short note removal
 		for (int i = 1; i < midiNoteStarts.size(); ++i)
 		{
-			if ((float)(midiNoteStarts[i] - midiNoteStarts[i - 1]) <= fftSize * 3.2f)
+			if ((float)(midiNoteStarts[i] - midiNoteStarts[i - 1]) <= fftSize * 3.05f)
 			{
-				midiNotes.remove(i-1);
+				midiNotes.remove(i - 1);
 				midiNoteStarts.remove(i - 1);
 			}
 		}
+
+		quantizeMelody();
 
 		textLog.moveCaretToEnd();
 		textLog.insertTextAtCaret("Most present note: " + (String)mostPresentNote);
@@ -214,6 +211,16 @@ public:
 		}
 		midiComp.addNoteToSequence(midiNotes[midiNotes.size() - 1], midiNoteStarts[midiNotes.size() - 1], songContour.size()*fftSize * 3 - midiNoteStarts[midiNotes.size() - 1]);
 		midiComp.finishTrack(songContour.size()*fftSize * 3);
+
+
+	}
+
+	void quantizeMelody()
+	{
+		/*
+		take random note, gather all others into clusters from base (2x, 3x, 4x etc from 16th note)
+		repeat untill success lol
+		*/
 
 
 	}
@@ -377,7 +384,8 @@ private:
 	Image spectrogramImage;
 	TextEditor textLog;
 
-
+	Array<int> midiNotes;
+	Array<int> midiNoteStarts;
 
 	float fifo[fftSize];
 	float fftData[2 * fftSize];
