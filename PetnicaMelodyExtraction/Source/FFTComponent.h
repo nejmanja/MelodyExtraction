@@ -222,7 +222,23 @@ public:
 		repeat untill success lol
 		*/
 
+		//take random note and get its length
+		Random rand;
+		int sampleNoteIndex = rand.nextFloat() * midiNotes.size();
+		int sampleLength = midiNoteStarts[sampleNoteIndex] - midiNoteStarts[sampleNoteIndex - 1];
+		float thres = sampleLength * 0.5f;
 
+		for (int i = 1; i < midiNotes.size(); ++i)
+		{
+			for (int x = 2; x < 9; ++i)
+			{
+				if (((midiNoteStarts[i] - midiNoteStarts[i - 1]) > (x * sampleLength - thres)) && ((midiNoteStarts[i] - midiNoteStarts[i - 1]) < (x * sampleLength + thres)))
+				{
+
+				}
+			}
+		}
+		
 	}
 
 	String findNoteFromDistance(int distance)
