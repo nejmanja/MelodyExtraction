@@ -232,9 +232,12 @@ public:
 		{
 			for (int x = 2; x < 9; ++i)
 			{
-				if (((midiNoteStarts[i] - midiNoteStarts[i - 1]) > (x * sampleLength - thres)) && ((midiNoteStarts[i] - midiNoteStarts[i - 1]) < (x * sampleLength + thres)))
+				int currentNoteLen = midiNoteStarts[i] - midiNoteStarts[i - 1];
+				if (currentNoteLen > (x * sampleLength - thres) && currentNoteLen < (x * sampleLength + thres))
 				{
-
+					int valToAdd = currentNoteLen - x * sampleLength; //length offset (negative if its less than x*sampleLen)
+					valToAdd += midiNoteStarts[i];
+					midiNoteStarts.setUnchecked(i, valToAdd);
 				}
 			}
 		}
