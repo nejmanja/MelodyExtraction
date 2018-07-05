@@ -222,26 +222,37 @@ public:
 		repeat untill success lol
 		*/
 
+		//create a copy for multiple modifications, then pass it back in the end
+		Array<int> midiNoteStartsCopy(midiNoteStarts);
+
 		//take random note and get its length
 		Random rand;
 		int sampleNoteIndex = rand.nextFloat() * midiNotes.size();
 		int sampleLength = midiNoteStarts[sampleNoteIndex] - midiNoteStarts[sampleNoteIndex - 1];
 		float thres = sampleLength * 0.5f;
 
+		float mismatchError = 0.0f; //diff between actual lengths and desired lengths
+
 		for (int i = 1; i < midiNotes.size(); ++i)
 		{
-			for (int x = 2; x < 9; ++i)
+			//TODO change this loop into individual cases
+			for (int x = 2; x < 9; ++x)
 			{
 				int currentNoteLen = midiNoteStarts[i] - midiNoteStarts[i - 1];
 				if (currentNoteLen > (x * sampleLength - thres) && currentNoteLen < (x * sampleLength + thres))
 				{
-					int valToAdd = currentNoteLen - x * sampleLength; //length offset (negative if its less than x*sampleLen)
-					valToAdd += midiNoteStarts[i];
-					midiNoteStarts.setUnchecked(i, valToAdd);
+					int valToAdd = x * sampleLength - currentNoteLen; //length offset
+					valToAdd += midiNoteStarts[i]; //in the end, the length should always be x * sampleLength
+					midiNoteStartsCopy.setUnchecked(i, valToAdd);
+					//get each error and find the whole error, then check for threshold
+					mismatchError += abs(currentNoteLen / (x * sampleLength) - 1); //gives values between 0 and 1
 				}
 			}
 		}
-		
+
+		mismatchError /= midiNotes.size();
+		textLog.moveCaretToEnd();
+		textLog.insertTextAtCaret("Total error: " + (String)mismatchError);
 	}
 
 	String findNoteFromDistance(int distance)
